@@ -30,20 +30,43 @@ st.set_page_config(
 )
 
 # Load environment variables
-print("Loading environment variables...")
-load_dotenv(verbose=True)  # Add verbose=True to see loading details
+# Load environment variables
+from dotenv import load_dotenv, find_dotenv
+# Try locating .env file explicitly
+dotenv_path = find_dotenv()
+if not dotenv_path:
+    # Fallback: try looking in the current directory and parent directory of the script
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    potential_paths = [
+        os.path.join(current_dir, '.env'),
+        os.path.join(os.path.dirname(current_dir), '.env')
+    ]
+    for path in potential_paths:
+        if os.path.exists(path):
+            dotenv_path = path
+            break
 
-# Debug: Print environment variable status
-api_key = os.getenv("BRIA_API_KEY")
-print(f"API Key present: {bool(api_key)}")
-print(f"API Key value: {api_key if api_key else 'Not found'}")
-print(f"Current working directory: {os.getcwd()}")
-print(f".env file exists: {os.path.exists('.env')}")
+if dotenv_path:
+    load_dotenv(dotenv_path, verbose=True)
+else:
+    load_dotenv(verbose=True)
+
+# print("Loading environment variables from:", dotenv_path if dotenv_path else "default locations")
+
+# Debug: Print environment variable status - REMOVED for security
+# api_key = os.getenv("BRIA_API_KEY")
+
 
 def initialize_session_state():
     """Initialize session state variables."""
     if 'api_key' not in st.session_state:
-        st.session_state.api_key = os.getenv('BRIA_API_KEY')
+        # Try to get API key from environment variable
+        env_key = os.getenv('BRIA_API_KEY')
+        if env_key:
+            st.session_state.api_key = env_key
+        else:
+            st.session_state.api_key = None
+            
     if 'generated_images' not in st.session_state:
         st.session_state.generated_images = []
     if 'current_image' not in st.session_state:
@@ -137,15 +160,94 @@ def auto_check_images(status_container):
     return False
 
 def main():
+    # Custom CSS
+    st.markdown("""
+    <style>
+        /* Import Google Font */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+
+        html, body, [class*="css"] {
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Hiding Streamlit default menu and footer for cleaner look */
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+
+        /* Modernize buttons */
+        .stButton button {
+            background-color: #4F46E5; /* Indigo-600 */
+            color: white;
+            border-radius: 8px;
+            border: none;
+            padding: 0.6rem 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        .stButton button:hover {
+            background-color: #4338CA; /* Indigo-700 */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        .stButton button:active {
+            transform: translateY(1px);
+        }
+        
+        /* Secondary buttons (if any) */
+        div[data-testid="stForm"] .stButton button {
+             background-color: #10B981; /* Emerald-500 */
+        }
+        
+        /* Input fields styling */
+        .stTextInput > div > div > input, .stTextArea > div > div > textarea {
+            border-radius: 8px;
+            border: 1px solid #E5E7EB;
+        }
+        .stTextInput > div > div > input:focus, .stTextArea > div > div > textarea:focus {
+            border-color: #6366F1;
+            box-shadow: 0 0 0 1px #6366F1;
+        }
+
+        /* Tab styling */
+        .stTabs [data-baseweb="tab-list"] {
+            gap: 24px;
+        }
+        .stTabs [data-baseweb="tab"] {
+            height: 50px;
+            white-space: pre-wrap;
+            background-color: transparent;
+            border-radius: 4px 4px 0 0;
+            gap: 1px;
+            padding-top: 10px;
+            padding-bottom: 10px;
+        }
+        .stTabs [aria-selected="true"] {
+            background-color: transparent;
+            border-bottom: 2px solid #4F46E5;
+            color: #4F46E5;
+        }
+
+    </style>
+    """, unsafe_allow_html=True)
+
     st.title("AdSnap Studio")
     initialize_session_state()
-    
-    # Sidebar for API key
+    # Sidebar Info
     with st.sidebar:
-        st.header("Settings")
-        api_key = st.text_input("Enter your API key:", value=st.session_state.api_key if st.session_state.api_key else "", type="password")
-        if api_key:
-            st.session_state.api_key = api_key
+        st.header("⚙️ Settings")
+        
+        st.markdown("""
+        ### ℹ️ About
+        **AdSnap Studio** is your AI-powered creative companion.
+        
+        **Features:**
+        - 🎨 Text-to-Image Generation
+        - 🛍️ Product Photography
+        - 🖌️ Generative Fill
+        - 🧼 Object Erasure
+        """)
+        st.markdown("---")
+        st.caption("Powered by BRIA AI")
 
     # Main tabs
     tabs = st.tabs([
@@ -190,80 +292,124 @@ def main():
                             if result:
                                 st.session_state.enhanced_prompt = result
                                 st.success("Prompt enhanced!")
-                                st.experimental_rerun()  # Rerun to update the display
+                                # st.rerun()  # Removed to prevent duplication/loops, session state updation is enough
                         except Exception as e:
                             st.error(f"Error enhancing prompt: {str(e)}")
                             
-            # Debug information
-            st.write("Debug - Session State:", {
-                "original_prompt": st.session_state.get("original_prompt"),
-                "enhanced_prompt": st.session_state.get("enhanced_prompt")
-            })
+            # Debug information - REMOVED
+            # st.write("Debug - Session State:", {
+            #     "original_prompt": st.session_state.get("original_prompt"),
+            #     "enhanced_prompt": st.session_state.get("enhanced_prompt")
+            # })
         
         with col2:
-            num_images = st.slider("Number of images", 1, 4, 1)
-            aspect_ratio = st.selectbox("Aspect ratio", ["1:1", "16:9", "9:16", "4:3", "3:4"])
-            enhance_img = st.checkbox("Enhance image quality", value=True)
+            with st.expander("⚙️ Settings", expanded=True):
+                num_images = st.slider("Number of images", 1, 4, 1)
+                aspect_ratio = st.selectbox("Aspect ratio", ["1:1", "16:9", "9:16", "4:3", "3:4"])
+                enhance_img = st.checkbox("Enhance image quality", value=True)
             
-            # Style options
-            st.subheader("Style Options")
-            style = st.selectbox("Image Style", [
-                "Realistic", "Artistic", "Cartoon", "Sketch", 
-                "Watercolor", "Oil Painting", "Digital Art"
-            ])
+            with st.expander("🎨 Style", expanded=True):
+                style = st.selectbox("Image Style", [
+                    "Realistic", "Artistic", "Cartoon", "Sketch", 
+                    "Watercolor", "Oil Painting", "Digital Art"
+                ])
             
-            # Add style to prompt
+            # Determine the final prompt to use (Original or Enhanced)
+            final_prompt = st.session_state.enhanced_prompt if st.session_state.get('enhanced_prompt') else prompt
+
+            # Add style to the final prompt
             if style and style != "Realistic":
-                prompt = f"{prompt}, in {style.lower()} style"
+                final_prompt = f"{final_prompt}, in {style.lower()} style"
+        
+        st.divider()
         
         # Generate button
-        if st.button("🎨 Generate Images", type="primary"):
+        if st.button("🎨 Generate Images", type="primary", use_container_width=True):
+            # Ensure API key is available from env
             if not st.session_state.api_key:
-                st.error("Please enter your API key in the sidebar.")
+                st.session_state.api_key = os.getenv('BRIA_API_KEY')
+            
+            if not st.session_state.api_key:
+                st.error("API Key not found. Please contact the administrator.")
                 return
                 
             with st.spinner("🎨 Generating your masterpiece..."):
                 try:
                     # Convert aspect ratio to proper format
                     result = generate_hd_image(
-                        prompt=st.session_state.enhanced_prompt or prompt,
+                        prompt=final_prompt,
                         api_key=st.session_state.api_key,
                         num_results=num_images,
-                        aspect_ratio=aspect_ratio,  # Already in correct format (e.g. "1:1")
-                        sync=True,  # Wait for results
+                        aspect_ratio=aspect_ratio,
+                        sync=True,
                         enhance_image=enhance_img,
                         medium="art" if style != "Realistic" else "photography",
-                        prompt_enhancement=False,  # We're already using our own prompt enhancement
-                        content_moderation=True  # Enable content moderation by default
+                        prompt_enhancement=False,
+                        content_moderation=True
                     )
                     
                     if result:
-                        # Debug logging
-                        st.write("Debug - Raw API Response:", result)
+                        # Debug logging - REMOVED
+                        # st.write("Debug - Raw API Response:", result)
                         
                         if isinstance(result, dict):
+                            urls = []
                             if "result_url" in result:
-                                st.session_state.edited_image = result["result_url"]
-                                st.success("✨ Image generated successfully!")
+                                urls.append(result["result_url"])
                             elif "result_urls" in result:
-                                st.session_state.edited_image = result["result_urls"][0]
-                                st.success("✨ Image generated successfully!")
+                                urls.extend(result["result_urls"])
                             elif "result" in result and isinstance(result["result"], list):
                                 for item in result["result"]:
                                     if isinstance(item, dict) and "urls" in item:
-                                        st.session_state.edited_image = item["urls"][0]
-                                        st.success("✨ Image generated successfully!")
-                                        break
-                                    elif isinstance(item, list) and len(item) > 0:
-                                        st.session_state.edited_image = item[0]
-                                        st.success("✨ Image generated successfully!")
-                                        break
+                                        urls.extend(item["urls"])
+                                    elif isinstance(item, list):
+                                        urls.extend(item)
+                            
+                            if urls:
+                                st.session_state.generated_images = urls
+                                st.session_state.edited_image = urls[0] # Keep main image as first one
+                                st.success(f"✨ Successfully generated {len(urls)} image{'s' if len(urls) > 1 else ''}!")
+                            else:
+                                st.error("No image URLs found in response.")
                         else:
                             st.error("No valid result format found in the API response.")
                             
                 except Exception as e:
                     st.error(f"Error generating images: {str(e)}")
-                    st.write("Full error:", str(e))
+        
+        # Display generated images
+        if st.session_state.generated_images:
+            st.markdown("### Generated Results")
+            
+            # Create rows of 2 columns
+            cols = st.columns(2)
+            for idx, img_url in enumerate(st.session_state.generated_images):
+                with cols[idx % 2]:
+                    st.image(img_url, caption=f"Result {idx+1}", use_column_width=True)
+                    
+                    # unique key for each download button
+                    img_data = download_image(img_url)
+                    if img_data:
+                        st.download_button(
+                            f"⬇️ Download {idx+1}",
+                            img_data,
+                            f"generated_image_{idx+1}.png",
+                            "image/png",
+                            key=f"dl_btn_{idx}"
+                        )
+                        
+        # Fallback for old session state or single image
+        elif st.session_state.edited_image:
+             st.markdown("### Generated Result")
+             st.image(st.session_state.edited_image, caption="Generated Image", use_column_width=True)
+             image_data = download_image(st.session_state.edited_image)
+             if image_data:
+                st.download_button(
+                    "⬇️ Download Image",
+                    image_data,
+                    "generated_image.png",
+                    "image/png"
+                )
     
     # Product Photography Tab
     with tabs[1]:
@@ -399,34 +545,43 @@ def main():
                     # Common settings for both types
                     col1, col2 = st.columns(2)
                     with col1:
-                        placement_type = st.selectbox("Placement Type", [
-                            "Original", "Automatic", "Manual Placement",
-                            "Manual Padding", "Custom Coordinates"
-                        ])
-                        num_results = st.slider("Number of Results", 1, 8, 4)
-                        sync_mode = st.checkbox("Synchronous Mode", False,
-                            help="Wait for results instead of getting URLs immediately")
-                        original_quality = st.checkbox("Original Quality", False,
-                            help="Maintain original image quality")
-                        
-                        if placement_type == "Manual Placement":
-                            positions = st.multiselect("Select Positions", [
-                                "Upper Left", "Upper Right", "Bottom Left", "Bottom Right",
-                                "Right Center", "Left Center", "Upper Center",
-                                "Bottom Center", "Center Vertical", "Center Horizontal"
-                            ], ["Upper Left"])
-                        
-                        elif placement_type == "Manual Padding":
-                            st.subheader("Padding Values (pixels)")
-                            pad_left = st.number_input("Left Padding", 0, 1000, 0)
-                            pad_right = st.number_input("Right Padding", 0, 1000, 0)
-                            pad_top = st.number_input("Top Padding", 0, 1000, 0)
-                            pad_bottom = st.number_input("Bottom Padding", 0, 1000, 0)
-                        
-                        elif placement_type in ["Automatic", "Manual Placement", "Custom Coordinates"]:
-                            st.subheader("Shot Size")
-                            shot_width = st.number_input("Width", 100, 2000, 1000)
-                            shot_height = st.number_input("Height", 100, 2000, 1000)
+                        with st.expander("📍 Placement & Size", expanded=True):
+                            placement_type = st.selectbox("Placement Type", [
+                                "Original", "Automatic", "Manual Placement",
+                                "Manual Padding", "Custom Coordinates"
+                            ])
+                            
+                            if placement_type == "Manual Placement":
+                                positions = st.multiselect("Select Positions", [
+                                    "Upper Left", "Upper Right", "Bottom Left", "Bottom Right",
+                                    "Right Center", "Left Center", "Upper Center",
+                                    "Bottom Center", "Center Vertical", "Center Horizontal"
+                                ], ["Upper Left"])
+                            
+                            elif placement_type == "Manual Padding":
+                                st.caption("Padding Values (pixels)")
+                                col_p1, col_p2 = st.columns(2)
+                                with col_p1:
+                                    pad_left = st.number_input("Left", 0, 1000, 0)
+                                    pad_top = st.number_input("Top", 0, 1000, 0)
+                                with col_p2:
+                                    pad_right = st.number_input("Right", 0, 1000, 0)
+                                    pad_bottom = st.number_input("Bottom", 0, 1000, 0)
+                            
+                            elif placement_type in ["Automatic", "Manual Placement", "Custom Coordinates"]:
+                                st.caption("Shot Size")
+                                col_s1, col_s2 = st.columns(2)
+                                with col_s1:
+                                    shot_width = st.number_input("Width", 100, 2000, 1000)
+                                with col_s2:
+                                    shot_height = st.number_input("Height", 100, 2000, 1000)
+
+                        with st.expander("⚙️ Generation Settings", expanded=False):
+                            num_results = st.slider("Number of Results", 1, 8, 4)
+                            sync_mode = st.checkbox("Synchronous Mode", False,
+                                help="Wait for results instead of getting URLs immediately")
+                            original_quality = st.checkbox("Original Quality", False,
+                                help="Maintain original image quality")
                     
                     with col2:
                         if placement_type == "Custom Coordinates":
@@ -487,8 +642,8 @@ def main():
                                     )
                                     
                                     if result:
-                                        # Debug logging
-                                        st.write("Debug - Raw API Response:", result)
+                                        # Debug logging - REMOVED
+                                        # st.write("Debug - Raw API Response:", result)
                                         
                                         if sync_mode:
                                             if isinstance(result, dict):
@@ -542,14 +697,14 @@ def main():
                                                 
                                                 # Try automatic checking first
                                                 if auto_check_images(status_container):
-                                                    st.experimental_rerun()
+                                                    st.rerun()
                                                 
                                                 # Add refresh button for manual checking
                                                 if refresh_container.button("🔄 Check for Generated Images"):
                                                     with st.spinner("Checking for completed images..."):
                                                         if check_generated_images():
                                                             status_container.success("✨ Image ready!")
-                                                            st.experimental_rerun()
+                                                            st.rerun()
                                                         else:
                                                             status_container.warning(f"⏳ Still generating your image{'s' if len(urls) > 1 else ''}... Please check again in a moment.")
                                 except Exception as e:
@@ -643,14 +798,14 @@ def main():
                                                 
                                                 # Try automatic checking first
                                                 if auto_check_images(status_container):
-                                                    st.experimental_rerun()
+                                                    st.rerun()
                                                 
                                                 # Add refresh button for manual checking
                                                 if refresh_container.button("🔄 Check for Generated Images"):
                                                     with st.spinner("Checking for completed images..."):
                                                         if check_generated_images():
                                                             status_container.success("✨ Image ready!")
-                                                            st.experimental_rerun()
+                                                            st.rerun()
                                                         else:
                                                             status_container.warning(f"⏳ Still generating your image{'s' if len(urls) > 1 else ''}... Please check again in a moment.")
                                 except Exception as e:
@@ -777,7 +932,7 @@ def main():
                             )
                             
                             if result:
-                                st.write("Debug - API Response:", result)
+                                # st.write("Debug - API Response:", result)
                                 
                                 if sync_mode:
                                     if "urls" in result and result["urls"]:

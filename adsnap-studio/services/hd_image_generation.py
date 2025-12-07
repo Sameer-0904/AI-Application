@@ -78,14 +78,26 @@ def generate_hd_image(
     }
     
     try:
-        print(f"Making request to: {url}")
-        print(f"Headers: {headers}")
+        # print(f"Making request to: {url}")
+        # print(f"Headers: {headers}")
         
-        response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        
+        # Try request with retries for server errors
+        max_retries = 3
+        for attempt in range(max_retries):
+            response = requests.post(url, headers=headers, json=data)
+            
+            if response.status_code in [500, 502, 503, 504]:
+                if attempt < max_retries - 1:
+                    print(f"Server error {response.status_code}, retrying... ({attempt + 1}/{max_retries})")
+                    import time
+                    time.sleep(2)
+                    continue
+            
+            response.raise_for_status()
+            break
+            
         print(f"Response status: {response.status_code}")
-        print(f"Response body: {response.text}")
+        # print(f"Response body: {response.text}")
         
         return response.json()
         
