@@ -679,18 +679,21 @@ def main():
 
 #____________________________________________________________________________________________________________________________________
     # Generative Fill Tab
+    # Generative Fill Tab
     with tabs[2]:
         st.header("🎨 Generative Fill")
         st.markdown("Draw a mask on the image and describe what you want to generate in that area.")
         
         uploaded_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"], key="fill_upload")
         if uploaded_file:
-            # Create columns for original image and canvas
-            col1, col2 = st.columns(2)
+            # Create columns for layout
+            col1, col2 = st.columns([1.5, 1])
+            
+            # Initialize canvas variables to ensure scope access
+            canvas_result = None
             
             with col1:
-                # Display original image
-                st.image(uploaded_file, caption="Original Image", use_column_width=True)
+                st.markdown("### 🖼️ Input & Result")
                 
                 # Get image dimensions for canvas
                 img = Image.open(uploaded_file)
@@ -711,9 +714,13 @@ def main():
                 # Convert to numpy array with proper shape and type
                 img_array = np.array(img).astype(np.uint8)
                 
-                # Add drawing canvas using Streamlit's drawing canvas component
-                stroke_width = st.slider("Brush width", 1, 50, 20)
-                stroke_color = st.color_picker("Brush color", "#fff")
+                # Add drawing canvas
+                col_brush1, col_brush2 = st.columns(2)
+                with col_brush1:
+                    stroke_width = st.slider("Brush width", 1, 50, 20)
+                with col_brush2:
+                    stroke_color = st.color_picker("Brush color", "#fff")
+                
                 drawing_mode = "freedraw"
                 
                 # Create canvas with background image
@@ -729,99 +736,10 @@ def main():
                     key="canvas",
                 )
                 
-                # Options for generation
-                st.subheader("Generation Options")
-                prompt = st.text_area("Describe what to generate in the masked area")
-                negative_prompt = st.text_area("Describe what to avoid (optional)")
-                
-                col_a, col_b = st.columns(2)
-                with col_a:
-                    num_results = st.slider("Number of variations", 1, 4, 1)
-                    sync_mode = st.checkbox("Synchronous Mode", False,
-                        help="Wait for results instead of getting URLs immediately",
-                        key="gen_fill_sync_mode")
-                
-                with col_b:
-                    seed = st.number_input("Seed (optional)", min_value=0, value=0,
-                        help="Use same seed to reproduce results")
-                    content_moderation = st.checkbox("Enable Content Moderation", False,
-                        key="gen_fill_content_mod")
-                
-                if st.button("🎨 Generate", type="primary"):
-                    if not prompt:
-                        st.error("Please enter a prompt describing what to generate.")
-                        return
-                    
-                    if canvas_result.image_data is None:
-                        st.error("Please draw a mask on the image first.")
-                        return
-                    
-                    # Convert canvas result to mask
-                    mask_img = Image.fromarray(canvas_result.image_data.astype('uint8'), mode='RGBA')
-                    mask_img = mask_img.convert('L')
-                    
-                    # Convert mask to bytes
-                    mask_bytes = io.BytesIO()
-                    mask_img.save(mask_bytes, format='PNG')
-                    mask_bytes = mask_bytes.getvalue()
-                    
-                    # Convert uploaded image to bytes
-                    image_bytes = uploaded_file.getvalue()
-                    
-                    with st.spinner("🎨 Generating..."):
-                        try:
-                            result = generative_fill(
-                                st.session_state.api_key,
-                                image_bytes,
-                                mask_bytes,
-                                prompt,
-                                negative_prompt=negative_prompt if negative_prompt else None,
-                                num_results=num_results,
-                                sync=sync_mode,
-                                seed=seed if seed != 0 else None,
-                                content_moderation=content_moderation
-                            )
-                            
-                            if result:
-                                # st.write("Debug - API Response:", result)
-                                
-                                if sync_mode:
-                                    if "urls" in result and result["urls"]:
-                                        st.session_state.edited_image = result["urls"][0]
-                                        if len(result["urls"]) > 1:
-                                            st.session_state.generated_images = result["urls"]
-                                        st.success("✨ Generation complete!")
-                                    elif "result_url" in result:
-                                        st.session_state.edited_image = result["result_url"]
-                                        st.success("✨ Generation complete!")
-                                else:
-                                    if "urls" in result:
-                                        st.session_state.pending_urls = result["urls"][:num_results]
-                                        
-                                        # Create containers for status
-                                        status_container = st.empty()
-                                        refresh_container = st.empty()
-                                        
-                                        # Show initial status
-                                        status_container.info(f"🎨 Generation started! Waiting for {len(st.session_state.pending_urls)} image{'s' if len(st.session_state.pending_urls) > 1 else ''}...")
-                                        
-                                        # Try automatic checking
-                                        if auto_check_images(status_container):
-                                            st.rerun()
-                                        
-                                        # Add refresh button
-                                        if refresh_container.button("🔄 Check for Generated Images"):
-                                            if check_generated_images():
-                                                status_container.success("✨ Images ready!")
-                                                st.rerun()
-                                            else:
-                                                status_container.warning("⏳ Still generating... Please check again in a moment.")
-                        except Exception as e:
-                            st.error(f"Error: {str(e)}")
-                            st.write("Full error details:", str(e))
-            
-            with col2:
+                # --- RESULT DISPLAY SECTION (Moved to Left) ---
                 if st.session_state.edited_image:
+                    st.divider()
+                    st.markdown("### ✨ Generated Result")
                     st.image(st.session_state.edited_image, caption="Generated Result", use_column_width=True)
                     image_data = download_image(st.session_state.edited_image)
                     if image_data:
@@ -829,11 +747,103 @@ def main():
                             "⬇️ Download Result",
                             image_data,
                             "generated_fill.png",
-                            "image/png"
+                            "image/png",
+                            use_container_width=True
                         )
                 elif st.session_state.pending_urls:
-                    st.info("Generation in progress. Click the refresh button above to check status.")
+                    st.divider()
+                    st.info("Generation in progress... check status on the right.")
 
+            with col2:
+                st.markdown("### ⚙️ Generation Settings")
+                
+                # Options for generation
+                prompt = st.text_area("Prompt", placeholder="Describe what to generate...")
+                negative_prompt = st.text_area("Negative Prompt", placeholder="What to avoid using...", height=68)
+                
+                with st.expander("Advanced Settings", expanded=True):
+                    num_results = st.slider("Number of variations", 1, 4, 1)
+                    seed = st.number_input("Seed", min_value=0, value=0, help="Set to >0 for reproducibility")
+                    sync_mode = st.checkbox("Synchronous Mode", False, help="Wait for results")
+                    content_moderation = st.checkbox("Content Moderation", False)
+
+                st.divider()
+
+                if st.button("🎨 Generate", type="primary", use_container_width=True):
+                    if not prompt:
+                        st.error("Please enter a prompt.")
+                    elif canvas_result.image_data is None:
+                        st.error("Please draw a mask first.")
+                    else:
+                        # Convert canvas result to mask
+                        mask_img = Image.fromarray(canvas_result.image_data.astype('uint8'), mode='RGBA')
+                        mask_img = mask_img.convert('L')
+                        
+                        # Convert mask to bytes
+                        mask_bytes = io.BytesIO()
+                        mask_img.save(mask_bytes, format='PNG')
+                        mask_bytes_val = mask_bytes.getvalue()
+                        
+                        # Convert uploaded image to bytes
+                        image_bytes = uploaded_file.getvalue()
+                        
+                        with st.spinner("🎨 Generating..."):
+                            try:
+                                result = generative_fill(
+                                    st.session_state.api_key,
+                                    image_bytes,
+                                    mask_bytes_val,
+                                    prompt,
+                                    negative_prompt=negative_prompt if negative_prompt else None,
+                                    num_results=num_results,
+                                    sync=sync_mode,
+                                    seed=seed if seed != 0 else None,
+                                    content_moderation=content_moderation
+                                )
+                                
+                                if result:
+                                    if sync_mode:
+                                        if "urls" in result and result["urls"]:
+                                            st.session_state.edited_image = result["urls"][0]
+                                            if len(result["urls"]) > 1:
+                                                st.session_state.generated_images = result["urls"]
+                                            st.success("✨ Done!")
+                                            st.rerun()
+                                        elif "result_url" in result:
+                                            st.session_state.edited_image = result["result_url"]
+                                            st.success("✨ Done!")
+                                            st.rerun()
+                                    else:
+                                        if "urls" in result:
+                                            st.session_state.pending_urls = result["urls"][:num_results]
+                                            # Create containers for status
+                                            status_container = st.empty()
+                                            
+                                            # Show initial status
+                                            status_container.info(f"Accepted! Waiting for results...")
+                                            
+                                            # Try automatic checking
+                                            if auto_check_images(status_container):
+                                                st.rerun()
+                                            
+                                            # If still pending after auto-check
+                                            st.rerun()
+
+                            except Exception as e:
+                                st.error(f"Error: {str(e)}")
+                
+                # Status for Async Mode (if not clicked just now)
+                if st.session_state.pending_urls:
+                    st.info(f"Processing {len(st.session_state.pending_urls)} images...")
+                    if st.button("🔄 Refresh Status", key="gen_refresh"):
+                         if check_generated_images():
+                             st.success("Ready!")
+                             st.rerun()
+                         else:
+                             st.warning("Still processing...")
+
+
+#___________________________________________________________________________________________________________________________________________
     # Erase Elements Tab
     with tabs[3]:
         st.header("🎨 Erase Elements")
