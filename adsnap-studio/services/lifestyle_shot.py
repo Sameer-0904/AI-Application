@@ -98,11 +98,12 @@ def lifestyle_shot_by_text(
         print(f"Data: {data}")
         
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.text}")
         
+        if not response.ok:
+            raise Exception(f"API Error ({response.status_code}): {response.text}")
+            
         return response.json()
     except Exception as e:
         raise Exception(f"Lifestyle shot generation failed: {str(e)}")
@@ -180,11 +181,12 @@ def lifestyle_shot_by_image(
         print(f"Data: {data}")
         
         response = requests.post(url, headers=headers, json=data)
-        response.raise_for_status()
-        
         print(f"Response status: {response.status_code}")
         print(f"Response body: {response.text}")
         
+        if not response.ok:
+            raise Exception(f"API Error ({response.status_code}): {response.text}")
+            
         return response.json()
     except Exception as e:
         raise Exception(f"Lifestyle shot generation failed: {str(e)}") 

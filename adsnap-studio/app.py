@@ -80,6 +80,7 @@ def initialize_session_state():
     if 'enhanced_prompt' not in st.session_state:
         st.session_state.enhanced_prompt = None
 
+@st.cache_data
 def download_image(url):
     """Download image from URL and return as bytes."""
     try:
@@ -247,7 +248,7 @@ def main():
         - 🧼 Object Erasure
         """)
         st.markdown("---")
-        st.caption("Powered by BRIA AI")
+        st.caption("Developed by Sameer Prajapati")
 
     # Main tabs
     tabs = st.tabs([
@@ -410,38 +411,81 @@ def main():
                     "generated_image.png",
                     "image/png"
                 )
-    
+
+
+
+#________________________________________________________________________________________________________________________________    
     # Product Photography Tab
     with tabs[1]:
         st.header("Product Photography")
         
-        uploaded_file = st.file_uploader("Upload Product Image", type=["png", "jpg", "jpeg"], key="product_upload")
-        if uploaded_file:
-            col1, col2 = st.columns(2)
+        # Main Layout: 2 Columns (Image vs Controls)
+        col_display, col_controls = st.columns([1, 1], gap="large")
+        
+        # --- LEFT COLUMN: Image Display ---
+        with col_display:
+            st.markdown("### 📸 Image Viewer")
             
-            with col1:
-                st.image(uploaded_file, caption="Original Image", use_column_width=True)
+            uploaded_file = st.file_uploader("Upload Product Image", type=["png", "jpg", "jpeg", "pdf"], key="product_upload")
+            
+            if uploaded_file:
+                with st.container(border=True):
+                    st.image(uploaded_file, caption="Original Input", use_column_width=True)
+            else:
+                st.info("👈 Please upload an image to start.")
+
+            # Display Result if available
+            if st.session_state.get('edited_image') and uploaded_file:
+                st.divider()
+                with st.container(border=True):
+                    st.success("✨ Result Ready")
+                    st.image(st.session_state.edited_image, caption="Generated Result", use_column_width=True)
+                    
+                    image_data = download_image(st.session_state.edited_image)
+                    if image_data:
+                        st.download_button(
+                            "⬇️ Download Result",
+                            image_data,
+                            "edited_product.png",
+                            "image/png",
+                            type="primary",
+                            use_container_width=True
+                        )
+            elif st.session_state.get('pending_urls') and uploaded_file:
+                st.divider()
+                st.info("⏳ Processing... Check status below.")
+
+        # --- RIGHT COLUMN: Controls ---
+        with col_controls:
+            if uploaded_file:
+                st.markdown("### 🛠️ Studio Controls")
                 
-                # Product editing options
-                edit_option = st.selectbox("Select Edit Option", [
-                    "Create Packshot",
-                    "Add Shadow",
-                    "Lifestyle Shot"
-                ])
+                # Mode Selection using Pills or Radio
+                edit_mode = st.radio(
+                    "Studio Mode",
+                    ["Create Packshot", "Add Shadow", "Lifestyle Shot"],
+                    horizontal=True,
+                    label_visibility="collapsed"
+                )
                 
-                if edit_option == "Create Packshot":
-                    col_a, col_b = st.columns(2)
-                    with col_a:
+                st.divider()
+                
+                # Stack based on mode
+                if edit_mode == "Create Packshot":
+                    st.subheader("📦 Packshot Settings")
+                    col1, col2 = st.columns(2)
+                    with col1:
                         bg_color = st.color_picker("Background Color", "#FFFFFF")
-                        sku = st.text_input("SKU (optional)", "")
-                    with col_b:
+                    with col2:
+                        sku = st.text_input("SKU", placeholder="Optional")
+                        
+                    with st.expander("Advanced Settings"):
                         force_rmbg = st.checkbox("Force Background Removal", False)
                         content_moderation = st.checkbox("Enable Content Moderation", False)
-                    
-                    if st.button("Create Packshot"):
-                        with st.spinner("Creating professional packshot..."):
+
+                    if st.button("✨ Create Packshot", type="primary", use_container_width=True):
+                        with st.spinner("Processing..."):
                             try:
-                                # First remove background if needed
                                 if force_rmbg:
                                     from services.background_service import remove_background
                                     bg_result = remove_background(
@@ -450,20 +494,14 @@ def main():
                                         content_moderation=content_moderation
                                     )
                                     if bg_result and "result_url" in bg_result:
-                                        # Download the background-removed image
-                                        response = requests.get(bg_result["result_url"])
-                                        if response.status_code == 200:
-                                            image_data = response.content
-                                        else:
-                                            st.error("Failed to download background-removed image")
-                                            return
+                                        resp = requests.get(bg_result["result_url"])
+                                        image_data = resp.content if resp.status_code == 200 else None
                                     else:
                                         st.error("Background removal failed")
-                                        return
+                                        st.stop()
                                 else:
                                     image_data = uploaded_file.getvalue()
                                 
-                                # Now create packshot
                                 result = create_packshot(
                                     st.session_state.api_key,
                                     image_data,
@@ -472,361 +510,174 @@ def main():
                                     force_rmbg=force_rmbg,
                                     content_moderation=content_moderation
                                 )
-                                
                                 if result and "result_url" in result:
-                                    st.success("✨ Packshot created successfully!")
                                     st.session_state.edited_image = result["result_url"]
-                                else:
-                                    st.error("No result URL in the API response. Please try again.")
+                                    st.rerun()
                             except Exception as e:
-                                st.error(f"Error creating packshot: {str(e)}")
-                                if "422" in str(e):
-                                    st.warning("Content moderation failed. Please ensure the image is appropriate.")
-                
-                elif edit_option == "Add Shadow":
-                    col_a, col_b = st.columns(2)
-                    with col_a:
-                        shadow_type = st.selectbox("Shadow Type", ["Natural", "Drop"])
-                        bg_color = st.color_picker("Background Color (optional)", "#FFFFFF")
-                        use_transparent_bg = st.checkbox("Use Transparent Background", True)
-                        shadow_color = st.color_picker("Shadow Color", "#000000")
-                        sku = st.text_input("SKU (optional)", "")
-                        
-                        # Shadow offset
-                        st.subheader("Shadow Offset")
-                        offset_x = st.slider("X Offset", -50, 50, 0)
-                        offset_y = st.slider("Y Offset", -50, 50, 15)
+                                st.error(f"Error: {e}")
+
+                elif edit_mode == "Add Shadow":
+                    st.subheader("👥 Shadow Studio")
                     
-                    with col_b:
-                        shadow_intensity = st.slider("Shadow Intensity", 0, 100, 60)
-                        shadow_blur = st.slider("Shadow Blur", 0, 50, 15 if shadow_type.lower() == "regular" else 20)
+                    # Presets
+                    shadow_presets = {
+                        "Custom": {},
+                        "Soft Drop": {"type": "Drop", "intensity": 40, "blur": 30, "x": 0, "y": 20},
+                        "Hard Cast": {"type": "Drop", "intensity": 80, "blur": 5, "x": 10, "y": 10},
+                        "Floating": {"type": "Float", "intensity": 60, "blur": 25, "width": 0, "height": 0},
+                    }
+                    preset = st.selectbox("Shadow Preset", list(shadow_presets.keys()), index=1)
+                    defaults = shadow_presets.get(preset, {})
+
+                    col_s1, col_s2 = st.columns(2)
+                    with col_s1:
+                        shadow_type_opts = ["Natural", "Drop", "Float"]
+                        def_type_idx = shadow_type_opts.index(defaults.get("type", "Drop")) if "type" in defaults else 1
+                        shadow_type = st.selectbox("Shadow Type", shadow_type_opts, index=def_type_idx, key=f"s_type_{preset}")
+                        shadow_color = st.color_picker("Color", "#000000")
+                    with col_s2:
+                        bg_choice = st.radio("Background", ["Transparent", "Color"], horizontal=True)
+                        bg_c = st.color_picker("Pick", "#ffffff") if bg_choice == "Color" else None
+
+                    with st.expander("Parametric Controls", expanded=True):
+                        intensity = st.slider("Intensity", 0, 100, defaults.get("intensity", 60), key=f"s_int_{preset}")
+                        blur = st.slider("Blur", 0, 100, defaults.get("blur", 20), key=f"s_blur_{preset}")
+                        col_xy1, col_xy2 = st.columns(2)
+                        with col_xy1: x_off = st.number_input("X Offset", -100, 100, defaults.get("x", 0), key=f"s_x_{preset}")
+                        with col_xy2: y_off = st.number_input("Y Offset", -100, 100, defaults.get("y", 15), key=f"s_y_{preset}")
                         
-                        # Float shadow specific controls
+                        w_scale, h_scale = 0, 70
                         if shadow_type == "Float":
-                            st.subheader("Float Shadow Settings")
-                            shadow_width = st.slider("Shadow Width", -100, 100, 0)
-                            shadow_height = st.slider("Shadow Height", -100, 100, 70)
-                        
-                        force_rmbg = st.checkbox("Force Background Removal", False)
-                        content_moderation = st.checkbox("Enable Content Moderation", False)
-                    
-                    if st.button("Add Shadow"):
-                        with st.spinner("Adding shadow effect..."):
+                            w_scale = st.slider("Width Scale", -100, 100, defaults.get("width", 0), key=f"s_w_{preset}")
+                            h_scale = st.slider("Height Scale", -100, 100, defaults.get("height", 70), key=f"s_h_{preset}")
+
+                    if st.button("👥 Apply Shadow", type="primary", use_container_width=True):
+                        with st.spinner("Applying shadow..."):
                             try:
-                                result = add_shadow(
-                                    api_key=st.session_state.api_key,
-                                    image_data=uploaded_file.getvalue(),
-                                    shadow_type=shadow_type.lower(),
-                                    background_color=None if use_transparent_bg else bg_color,
-                                    shadow_color=shadow_color,
-                                    shadow_offset=[offset_x, offset_y],
-                                    shadow_intensity=shadow_intensity,
-                                    shadow_blur=shadow_blur,
-                                    shadow_width=shadow_width if shadow_type == "Float" else None,
-                                    shadow_height=shadow_height if shadow_type == "Float" else 70,
-                                    sku=sku if sku else None,
-                                    force_rmbg=force_rmbg,
-                                    content_moderation=content_moderation
-                                )
+                                # Map UI types to API accepted types ("regular" or "float")
+                                api_shadow_type = "float" if shadow_type == "Float" else "regular"
                                 
-                                if result and "result_url" in result:
-                                    st.success("✨ Shadow added successfully!")
-                                    st.session_state.edited_image = result["result_url"]
-                                else:
-                                    st.error("No result URL in the API response. Please try again.")
+                                res = add_shadow(
+                                    st.session_state.api_key,
+                                    image_data=uploaded_file.getvalue(),
+                                    shadow_type=api_shadow_type,
+                                    background_color=bg_c,
+                                    shadow_color=shadow_color,
+                                    shadow_offset=[x_off, y_off],
+                                    shadow_intensity=intensity,
+                                    shadow_blur=blur,
+                                    shadow_width=w_scale if api_shadow_type=="float" else None,
+                                    shadow_height=h_scale if api_shadow_type=="float" else None,
+                                    force_rmbg=True
+                                )
+                                if res and "result_url" in res:
+                                    st.session_state.edited_image = res["result_url"]
+                                    st.rerun()
                             except Exception as e:
-                                st.error(f"Error adding shadow: {str(e)}")
-                                if "422" in str(e):
-                                    st.warning("Content moderation failed. Please ensure the image is appropriate.")
-                
-                elif edit_option == "Lifestyle Shot":
-                    shot_type = st.radio("Shot Type", ["Text Prompt", "Reference Image"])
-                    
-                    # Common settings for both types
-                    col1, col2 = st.columns(2)
-                    with col1:
-                        with st.expander("📍 Placement & Size", expanded=True):
-                            placement_type = st.selectbox("Placement Type", [
-                                "Original", "Automatic", "Manual Placement",
-                                "Manual Padding", "Custom Coordinates"
-                            ])
-                            
-                            if placement_type == "Manual Placement":
-                                positions = st.multiselect("Select Positions", [
-                                    "Upper Left", "Upper Right", "Bottom Left", "Bottom Right",
-                                    "Right Center", "Left Center", "Upper Center",
-                                    "Bottom Center", "Center Vertical", "Center Horizontal"
-                                ], ["Upper Left"])
-                            
-                            elif placement_type == "Manual Padding":
-                                st.caption("Padding Values (pixels)")
-                                col_p1, col_p2 = st.columns(2)
-                                with col_p1:
-                                    pad_left = st.number_input("Left", 0, 1000, 0)
-                                    pad_top = st.number_input("Top", 0, 1000, 0)
-                                with col_p2:
-                                    pad_right = st.number_input("Right", 0, 1000, 0)
-                                    pad_bottom = st.number_input("Bottom", 0, 1000, 0)
-                            
-                            elif placement_type in ["Automatic", "Manual Placement", "Custom Coordinates"]:
-                                st.caption("Shot Size")
-                                col_s1, col_s2 = st.columns(2)
-                                with col_s1:
-                                    shot_width = st.number_input("Width", 100, 2000, 1000)
-                                with col_s2:
-                                    shot_height = st.number_input("Height", 100, 2000, 1000)
+                                st.error(f"Error: {e}")
 
-                        with st.expander("⚙️ Generation Settings", expanded=False):
-                            num_results = st.slider("Number of Results", 1, 8, 4)
-                            sync_mode = st.checkbox("Synchronous Mode", False,
-                                help="Wait for results instead of getting URLs immediately")
-                            original_quality = st.checkbox("Original Quality", False,
-                                help="Maintain original image quality")
+                elif edit_mode == "Lifestyle Shot":
+                    st.subheader("Location Shoot")
+                    ls_mode = st.radio("Source", ["Text Description", "Reference Image"], horizontal=True)
                     
-                    with col2:
-                        if placement_type == "Custom Coordinates":
-                            st.subheader("Product Position")
-                            fg_width = st.number_input("Product Width", 50, 1000, 500)
-                            fg_height = st.number_input("Product Height", 50, 1000, 500)
-                            fg_x = st.number_input("X Position", -500, 1500, 0)
-                            fg_y = st.number_input("Y Position", -500, 1500, 0)
-                        
-                        sku = st.text_input("SKU (optional)")
-                        force_rmbg = st.checkbox("Force Background Removal", False)
-                        content_moderation = st.checkbox("Enable Content Moderation", False)
-                        
-                        if shot_type == "Text Prompt":
-                            fast_mode = st.checkbox("Fast Mode", True,
-                                help="Balance between speed and quality")
-                            optimize_desc = st.checkbox("Optimize Description", True,
-                                help="Enhance scene description using AI")
-                            if not fast_mode:
-                                exclude_elements = st.text_area("Exclude Elements (optional)",
-                                    help="Elements to exclude from the generated scene")
-                        else:  # Reference Image
-                            enhance_ref = st.checkbox("Enhance Reference Image", True,
-                                help="Improve lighting, shadows, and texture")
-                            ref_influence = st.slider("Reference Influence", 0.0, 1.0, 1.0,
-                                help="Control similarity to reference image")
-                    
-                    if shot_type == "Text Prompt":
-                        prompt = st.text_area("Describe the environment")
-                        if st.button("Generate Lifestyle Shot") and prompt:
-                            with st.spinner("Generating lifestyle shot..."):
+                    with st.expander("Product Placement", expanded=False):
+                        placement = st.selectbox("Type", ["Original", "Automatic", "Manual Placement"])
+                        positions = []
+                        if placement == "Manual Placement":
+                            positions = st.multiselect("Positions", ["Center", "Bottom Center", "Upper Left"], ["Center"])
+
+                    if ls_mode == "Text Description":
+                        scene = st.text_area("Describe the scene", height=100)
+                        if st.button("Generate Scene", type="primary", use_container_width=True):
+                            with st.spinner("Rendering..."):
                                 try:
-                                    # Convert placement selections to API format
-                                    if placement_type == "Manual Placement":
-                                        manual_placements = [p.lower().replace(" ", "_") for p in positions]
-                                    else:
-                                        manual_placements = ["upper_left"]
-                                    
-                                    result = lifestyle_shot_by_text(
+                                    res = lifestyle_shot_by_text(
                                         api_key=st.session_state.api_key,
                                         image_data=uploaded_file.getvalue(),
-                                        scene_description=prompt,
-                                        placement_type=placement_type.lower().replace(" ", "_"),
-                                        num_results=num_results,
-                                        sync=sync_mode,
-                                        fast=fast_mode,
-                                        optimize_description=optimize_desc,
-                                        shot_size=[shot_width, shot_height] if placement_type != "Original" else [1000, 1000],
-                                        original_quality=original_quality,
-                                        exclude_elements=exclude_elements if not fast_mode else None,
-                                        manual_placement_selection=manual_placements,
-                                        padding_values=[pad_left, pad_right, pad_top, pad_bottom] if placement_type == "Manual Padding" else [0, 0, 0, 0],
-                                        foreground_image_size=[fg_width, fg_height] if placement_type == "Custom Coordinates" else None,
-                                        foreground_image_location=[fg_x, fg_y] if placement_type == "Custom Coordinates" else None,
-                                        force_rmbg=force_rmbg,
-                                        content_moderation=content_moderation,
-                                        sku=sku if sku else None
+                                        scene_description=scene,
+                                        placement_type=placement.lower().replace(" ", "_"),
+                                        num_results=1,
+                                        sync=True,
+                                        manual_placement_selection=[p.lower().replace(" ", "_") for p in positions],
+                                        force_rmbg=True
                                     )
+                                    # Robust response parsing
+                                    url = None
+                                    if res:
+                                        if "result_urls" in res and res["result_urls"]:
+                                            url = res["result_urls"][0]
+                                        elif "result_url" in res:
+                                            url = res["result_url"]
+                                        elif "urls" in res and res["urls"]:
+                                            url = res["urls"][0]
+                                        elif "result" in res:
+                                            # Handle nested result structures
+                                            if isinstance(res["result"], list) and res["result"]:
+                                                item = res["result"][0]
+                                                if isinstance(item, str): url = item
+                                                elif isinstance(item, list) and item and isinstance(item[0], str): 
+                                                    url = item[0]
+                                                elif isinstance(item, dict):
+                                                    if "urls" in item and item["urls"]: url = item["urls"][0]
+                                                    elif "url" in item: url = item["url"]
                                     
-                                    if result:
-                                        # Debug logging - REMOVED
-                                        # st.write("Debug - Raw API Response:", result)
-                                        
-                                        if sync_mode:
-                                            if isinstance(result, dict):
-                                                if "result_url" in result:
-                                                    st.session_state.edited_image = result["result_url"]
-                                                    st.success("✨ Image generated successfully!")
-                                                elif "result_urls" in result:
-                                                    st.session_state.edited_image = result["result_urls"][0]
-                                                    st.success("✨ Image generated successfully!")
-                                                elif "result" in result and isinstance(result["result"], list):
-                                                    for item in result["result"]:
-                                                        if isinstance(item, dict) and "urls" in item:
-                                                            st.session_state.edited_image = item["urls"][0]
-                                                            st.success("✨ Image generated successfully!")
-                                                            break
-                                                        elif isinstance(item, list) and len(item) > 0:
-                                                            st.session_state.edited_image = item[0]
-                                                            st.success("✨ Image generated successfully!")
-                                                            break
-                                                elif "urls" in result:
-                                                    st.session_state.edited_image = result["urls"][0]
-                                                    st.success("✨ Image generated successfully!")
-                                        else:
-                                            urls = []
-                                            if isinstance(result, dict):
-                                                if "urls" in result:
-                                                    urls.extend(result["urls"][:num_results])  # Limit to requested number
-                                                elif "result" in result and isinstance(result["result"], list):
-                                                    # Process each result item
-                                                    for item in result["result"]:
-                                                        if isinstance(item, dict) and "urls" in item:
-                                                            urls.extend(item["urls"])
-                                                        elif isinstance(item, list):
-                                                            urls.extend(item)
-                                                        # Break if we have enough URLs
-                                                        if len(urls) >= num_results:
-                                                            break
-                                                    
-                                                    # Trim to requested number
-                                                    urls = urls[:num_results]
-                                            
-                                            if urls:
-                                                st.session_state.pending_urls = urls
-                                                
-                                                # Create a container for status messages
-                                                status_container = st.empty()
-                                                refresh_container = st.empty()
-                                                
-                                                # Show initial status
-                                                status_container.info(f"🎨 Generation started! Waiting for {len(urls)} image{'s' if len(urls) > 1 else ''}...")
-                                                
-                                                # Try automatic checking first
-                                                if auto_check_images(status_container):
-                                                    st.rerun()
-                                                
-                                                # Add refresh button for manual checking
-                                                if refresh_container.button("🔄 Check for Generated Images"):
-                                                    with st.spinner("Checking for completed images..."):
-                                                        if check_generated_images():
-                                                            status_container.success("✨ Image ready!")
-                                                            st.rerun()
-                                                        else:
-                                                            status_container.warning(f"⏳ Still generating your image{'s' if len(urls) > 1 else ''}... Please check again in a moment.")
+                                    if url:
+                                        st.session_state.edited_image = url
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Could not extract image URL from response: {res}")
                                 except Exception as e:
-                                    st.error(f"Error: {str(e)}")
-                                    if "422" in str(e):
-                                        st.warning("Content moderation failed. Please ensure the content is appropriate.")
+                                    st.error(f"Error: {e}")
                     else:
-                        ref_image = st.file_uploader("Upload Reference Image", type=["png", "jpg", "jpeg"], key="ref_upload")
-                        if st.button("Generate Lifestyle Shot") and ref_image:
-                            with st.spinner("Generating lifestyle shot..."):
+                        ref = st.file_uploader("Reference Image", ["png", "jpg"], key="ls_ref_upload")
+                        if st.button("Transfer Style", type="primary", use_container_width=True) and ref:
+                            with st.spinner("Rendering..."):
                                 try:
-                                    # Convert placement selections to API format
-                                    if placement_type == "Manual Placement":
-                                        manual_placements = [p.lower().replace(" ", "_") for p in positions]
-                                    else:
-                                        manual_placements = ["upper_left"]
-                                    
-                                    result = lifestyle_shot_by_image(
+                                    res = lifestyle_shot_by_image(
                                         api_key=st.session_state.api_key,
                                         image_data=uploaded_file.getvalue(),
-                                        reference_image=ref_image.getvalue(),
-                                        placement_type=placement_type.lower().replace(" ", "_"),
-                                        num_results=num_results,
-                                        sync=sync_mode,
-                                        shot_size=[shot_width, shot_height] if placement_type != "Original" else [1000, 1000],
-                                        original_quality=original_quality,
-                                        manual_placement_selection=manual_placements,
-                                        padding_values=[pad_left, pad_right, pad_top, pad_bottom] if placement_type == "Manual Padding" else [0, 0, 0, 0],
-                                        foreground_image_size=[fg_width, fg_height] if placement_type == "Custom Coordinates" else None,
-                                        foreground_image_location=[fg_x, fg_y] if placement_type == "Custom Coordinates" else None,
-                                        force_rmbg=force_rmbg,
-                                        content_moderation=content_moderation,
-                                        sku=sku if sku else None,
-                                        enhance_ref_image=enhance_ref,
-                                        ref_image_influence=ref_influence
+                                        reference_image=ref.getvalue(),
+                                        placement_type=placement.lower().replace(" ", "_"),
+                                        num_results=1,
+                                        sync=True,
+                                        manual_placement_selection=[p.lower().replace(" ", "_") for p in positions],
+                                        force_rmbg=True,
+                                        enhance_ref_image=True,
+                                        ref_image_influence=0.6
                                     )
+                                    # Robust response parsing
+                                    url = None
+                                    if res:
+                                        if "result_urls" in res and res["result_urls"]:
+                                            url = res["result_urls"][0]
+                                        elif "result_url" in res:
+                                            url = res["result_url"]
+                                        elif "urls" in res and res["urls"]:
+                                            url = res["urls"][0]
+                                        elif "result" in res:
+                                            # Handle nested result structures
+                                            if isinstance(res["result"], list) and res["result"]:
+                                                item = res["result"][0]
+                                                if isinstance(item, str): url = item
+                                                elif isinstance(item, list) and item and isinstance(item[0], str): 
+                                                    url = item[0]
+                                                elif isinstance(item, dict):
+                                                    if "urls" in item and item["urls"]: url = item["urls"][0]
+                                                    elif "url" in item: url = item["url"]
                                     
-                                    if result:
-                                        # Debug logging
-                                        st.write("Debug - Raw API Response:", result)
-                                        
-                                        if sync_mode:
-                                            if isinstance(result, dict):
-                                                if "result_url" in result:
-                                                    st.session_state.edited_image = result["result_url"]
-                                                    st.success("✨ Image generated successfully!")
-                                                elif "result_urls" in result:
-                                                    st.session_state.edited_image = result["result_urls"][0]
-                                                    st.success("✨ Image generated successfully!")
-                                                elif "result" in result and isinstance(result["result"], list):
-                                                    for item in result["result"]:
-                                                        if isinstance(item, dict) and "urls" in item:
-                                                            st.session_state.edited_image = item["urls"][0]
-                                                            st.success("✨ Image generated successfully!")
-                                                            break
-                                                        elif isinstance(item, list) and len(item) > 0:
-                                                            st.session_state.edited_image = item[0]
-                                                            st.success("✨ Image generated successfully!")
-                                                            break
-                                                elif "urls" in result:
-                                                    st.session_state.edited_image = result["urls"][0]
-                                                    st.success("✨ Image generated successfully!")
-                                        else:
-                                            urls = []
-                                            if isinstance(result, dict):
-                                                if "urls" in result:
-                                                    urls.extend(result["urls"][:num_results])  # Limit to requested number
-                                                elif "result" in result and isinstance(result["result"], list):
-                                                    # Process each result item
-                                                    for item in result["result"]:
-                                                        if isinstance(item, dict) and "urls" in item:
-                                                            urls.extend(item["urls"])
-                                                        elif isinstance(item, list):
-                                                            urls.extend(item)
-                                                        # Break if we have enough URLs
-                                                        if len(urls) >= num_results:
-                                                            break
-                                                    
-                                                    # Trim to requested number
-                                                    urls = urls[:num_results]
-                                            
-                                            if urls:
-                                                st.session_state.pending_urls = urls
-                                                
-                                                # Create a container for status messages
-                                                status_container = st.empty()
-                                                refresh_container = st.empty()
-                                                
-                                                # Show initial status
-                                                status_container.info(f"🎨 Generation started! Waiting for {len(urls)} image{'s' if len(urls) > 1 else ''}...")
-                                                
-                                                # Try automatic checking first
-                                                if auto_check_images(status_container):
-                                                    st.rerun()
-                                                
-                                                # Add refresh button for manual checking
-                                                if refresh_container.button("🔄 Check for Generated Images"):
-                                                    with st.spinner("Checking for completed images..."):
-                                                        if check_generated_images():
-                                                            status_container.success("✨ Image ready!")
-                                                            st.rerun()
-                                                        else:
-                                                            status_container.warning(f"⏳ Still generating your image{'s' if len(urls) > 1 else ''}... Please check again in a moment.")
+                                    if url:
+                                        st.session_state.edited_image = url
+                                        st.rerun()
+                                    else:
+                                        st.error(f"Could not extract image URL from response: {res}")
                                 except Exception as e:
-                                    st.error(f"Error: {str(e)}")
-                                    if "422" in str(e):
-                                        st.warning("Content moderation failed. Please ensure the content is appropriate.")
-            
-            with col2:
-                if st.session_state.edited_image:
-                    st.image(st.session_state.edited_image, caption="Edited Image", use_column_width=True)
-                    image_data = download_image(st.session_state.edited_image)
-                    if image_data:
-                        st.download_button(
-                            "⬇️ Download Result",
-                            image_data,
-                            "edited_product.png",
-                            "image/png"
-                        )
-                elif st.session_state.pending_urls:
-                    st.info("Images are being generated. Click the refresh button above to check if they're ready.")
+                                    st.error(f"Error: {e}")
+            else:
+                st.info("👈 Please upload an image in the left panel.")
 
+
+
+#____________________________________________________________________________________________________________________________________
     # Generative Fill Tab
     with tabs[2]:
         st.header("🎨 Generative Fill")
