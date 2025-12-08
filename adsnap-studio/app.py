@@ -19,7 +19,12 @@ import time
 import base64
 from streamlit_drawable_canvas import st_canvas
 import numpy as np
+import warnings
 from services.erase_foreground import erase_foreground
+
+# Suppress warnings
+warnings.filterwarnings("ignore", category=RuntimeWarning)
+
 
 # Configure Streamlit page
 st.set_page_config(
@@ -60,25 +65,36 @@ else:
 def initialize_session_state():
     """Initialize session state variables."""
     if 'api_key' not in st.session_state:
-        # Try to get API key from environment variable
         env_key = os.getenv('BRIA_API_KEY')
-        if env_key:
-            st.session_state.api_key = env_key
-        else:
-            st.session_state.api_key = None
-            
-    if 'generated_images' not in st.session_state:
-        st.session_state.generated_images = []
-    if 'current_image' not in st.session_state:
-        st.session_state.current_image = None
-    if 'pending_urls' not in st.session_state:
-        st.session_state.pending_urls = []
-    if 'edited_image' not in st.session_state:
-        st.session_state.edited_image = None
-    if 'original_prompt' not in st.session_state:
-        st.session_state.original_prompt = ""
+        st.session_state.api_key = env_key if env_key else None
+        
+    # Generate Images Tab State
+    if 'txt2img_urls' not in st.session_state:
+        st.session_state.txt2img_urls = []
+    if 'txt2img_result' not in st.session_state:
+        st.session_state.txt2img_result = None
     if 'enhanced_prompt' not in st.session_state:
         st.session_state.enhanced_prompt = None
+    if 'original_prompt' not in st.session_state:
+        st.session_state.original_prompt = ""
+        
+    # Product Photography Tab State
+    if 'product_result' not in st.session_state:
+        st.session_state.product_result = None
+    if 'product_pending' not in st.session_state:
+        st.session_state.product_pending = []
+        
+    # Generative Fill Tab State
+    if 'gen_fill_result' not in st.session_state:
+        st.session_state.gen_fill_result = None
+    if 'gen_fill_urls' not in st.session_state:
+        st.session_state.gen_fill_urls = []
+    if 'gen_fill_pending' not in st.session_state:
+        st.session_state.gen_fill_pending = []
+        
+    # Erase Elements State
+    if 'erase_result' not in st.session_state:
+        st.session_state.erase_result = None
 
 @st.cache_data
 def download_image(url):
@@ -119,13 +135,14 @@ def apply_image_filter(image, filter_type):
         st.error(f"Error applying filter: {str(e)}")
         return None
 
-def check_generated_images():
+def check_generated_images(pending_key, result_key, list_key=None):
     """Check if pending images are ready and update the display."""
-    if st.session_state.pending_urls:
+    pending_list = st.session_state.get(pending_key, [])
+    if pending_list:
         ready_images = []
         still_pending = []
         
-        for url in st.session_state.pending_urls:
+        for url in pending_list:
             try:
                 response = requests.head(url)
                 # Consider an image ready if we get a 200 response with any content length
@@ -137,28 +154,52 @@ def check_generated_images():
                 still_pending.append(url)
         
         # Update the pending URLs list
-        st.session_state.pending_urls = still_pending
+        st.session_state[pending_key] = still_pending
         
         # If we found any ready images, update the display
         if ready_images:
-            st.session_state.edited_image = ready_images[0]  # Display the first ready image
-            if len(ready_images) > 1:
-                st.session_state.generated_images = ready_images  # Store all ready images
+            st.session_state[result_key] = ready_images[0]  # Display the first ready image
+            if list_key and len(ready_images) > 1:
+                st.session_state[list_key] = ready_images  # Store all ready images
             return True
             
     return False
 
-def auto_check_images(status_container):
+def auto_check_images(status_container, pending_key, result_key, list_key=None):
     """Automatically check for image completion a few times."""
     max_attempts = 3
     attempt = 0
-    while attempt < max_attempts and st.session_state.pending_urls:
+    while attempt < max_attempts and st.session_state.get(pending_key):
         time.sleep(2)  # Wait 2 seconds between checks
-        if check_generated_images():
+        if check_generated_images(pending_key, result_key, list_key):
             status_container.success("✨ Image ready!")
             return True
         attempt += 1
     return False
+
+@st.cache_data
+def process_image_for_canvas(image_bytes, max_width=600):
+    """Process image for canvas: resize and convert to RGB."""
+    try:
+        image = Image.open(io.BytesIO(image_bytes))
+        img_width, img_height = image.size
+        
+        # Calculate new dimensions
+        if img_width > max_width:
+             aspect_ratio = img_height / img_width
+             new_width = max_width
+             new_height = int(new_width * aspect_ratio)
+             image = image.resize((new_width, new_height))
+        else:
+             new_width = img_width
+             new_height = img_height
+             
+        if image.mode != "RGB":
+            image = image.convert("RGB")
+            
+        return image, new_width, new_height
+    except Exception as e:
+        return None, 0, 0
 
 def main():
     # Custom CSS
@@ -367,8 +408,8 @@ def main():
                                         urls.extend(item)
                             
                             if urls:
-                                st.session_state.generated_images = urls
-                                st.session_state.edited_image = urls[0] # Keep main image as first one
+                                st.session_state.txt2img_urls = urls
+                                st.session_state.txt2img_result = urls[0] # Keep main image as first one
                                 st.success(f"✨ Successfully generated {len(urls)} image{'s' if len(urls) > 1 else ''}!")
                             else:
                                 st.error("No image URLs found in response.")
@@ -379,12 +420,12 @@ def main():
                     st.error(f"Error generating images: {str(e)}")
         
         # Display generated images
-        if st.session_state.generated_images:
+        if st.session_state.txt2img_urls:
             st.markdown("### Generated Results")
             
             # Create rows of 2 columns
             cols = st.columns(2)
-            for idx, img_url in enumerate(st.session_state.generated_images):
+            for idx, img_url in enumerate(st.session_state.txt2img_urls):
                 with cols[idx % 2]:
                     st.image(img_url, caption=f"Result {idx+1}", use_column_width=True)
                     
@@ -400,10 +441,10 @@ def main():
                         )
                         
         # Fallback for old session state or single image
-        elif st.session_state.edited_image:
+        elif st.session_state.txt2img_result:
              st.markdown("### Generated Result")
-             st.image(st.session_state.edited_image, caption="Generated Image", use_column_width=True)
-             image_data = download_image(st.session_state.edited_image)
+             st.image(st.session_state.txt2img_result, caption="Generated Image", use_column_width=True)
+             image_data = download_image(st.session_state.txt2img_result)
              if image_data:
                 st.download_button(
                     "⬇️ Download Image",
@@ -435,13 +476,13 @@ def main():
                 st.info("👈 Please upload an image to start.")
 
             # Display Result if available
-            if st.session_state.get('edited_image') and uploaded_file:
+            if st.session_state.get('product_result') and uploaded_file:
                 st.divider()
                 with st.container(border=True):
                     st.success("✨ Result Ready")
-                    st.image(st.session_state.edited_image, caption="Generated Result", use_column_width=True)
+                    st.image(st.session_state.product_result, caption="Generated Result", use_column_width=True)
                     
-                    image_data = download_image(st.session_state.edited_image)
+                    image_data = download_image(st.session_state.product_result)
                     if image_data:
                         st.download_button(
                             "⬇️ Download Result",
@@ -451,7 +492,7 @@ def main():
                             type="primary",
                             use_container_width=True
                         )
-            elif st.session_state.get('pending_urls') and uploaded_file:
+            elif st.session_state.get('product_pending') and uploaded_file:
                 st.divider()
                 st.info("⏳ Processing... Check status below.")
 
@@ -511,7 +552,7 @@ def main():
                                     content_moderation=content_moderation
                                 )
                                 if result and "result_url" in result:
-                                    st.session_state.edited_image = result["result_url"]
+                                    st.session_state.product_result = result["result_url"]
                                     st.rerun()
                             except Exception as e:
                                 st.error(f"Error: {e}")
@@ -519,7 +560,7 @@ def main():
                 elif edit_mode == "Add Shadow":
                     st.subheader("👥 Shadow Studio")
                     
-                    # Presets
+                    # Presets (omitted for brevity during search, but included implicitly by context)
                     shadow_presets = {
                         "Custom": {},
                         "Soft Drop": {"type": "Drop", "intensity": 40, "blur": 30, "x": 0, "y": 20},
@@ -571,7 +612,7 @@ def main():
                                     force_rmbg=True
                                 )
                                 if res and "result_url" in res:
-                                    st.session_state.edited_image = res["result_url"]
+                                    st.session_state.product_result = res["result_url"]
                                     st.rerun()
                             except Exception as e:
                                 st.error(f"Error: {e}")
@@ -622,7 +663,7 @@ def main():
                                                     elif "url" in item: url = item["url"]
                                     
                                     if url:
-                                        st.session_state.edited_image = url
+                                        st.session_state.product_result = url
                                         st.rerun()
                                     else:
                                         st.error(f"Could not extract image URL from response: {res}")
@@ -666,7 +707,7 @@ def main():
                                                     elif "url" in item: url = item["url"]
                                     
                                     if url:
-                                        st.session_state.edited_image = url
+                                        st.session_state.product_result = url
                                         st.rerun()
                                     else:
                                         st.error(f"Could not extract image URL from response: {res}")
@@ -687,7 +728,7 @@ def main():
         uploaded_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"], key="fill_upload")
         if uploaded_file:
             # Create columns for layout
-            col1, col2 = st.columns([1.5, 1])
+            col1, col2 = st.columns(2)
             
             # Initialize canvas variables to ensure scope access
             canvas_result = None
@@ -695,53 +736,40 @@ def main():
             with col1:
                 st.markdown("### 🖼️ Input & Result")
                 
-                # Get image dimensions for canvas
-                img = Image.open(uploaded_file)
-                img_width, img_height = img.size
+                # Use cached image processing
+                img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=600)
                 
-                # Calculate aspect ratio and set canvas height
-                aspect_ratio = img_height / img_width
-                canvas_width = min(img_width, 800)  # Max width of 800px
-                canvas_height = int(canvas_width * aspect_ratio)
-                
-                # Resize image to match canvas dimensions
-                img = img.resize((canvas_width, canvas_height))
-                
-                # Convert to RGB if necessary
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
-                
-                # Convert to numpy array with proper shape and type
-                img_array = np.array(img).astype(np.uint8)
-                
-                # Add drawing canvas
-                col_brush1, col_brush2 = st.columns(2)
-                with col_brush1:
-                    stroke_width = st.slider("Brush width", 1, 50, 20)
-                with col_brush2:
-                    stroke_color = st.color_picker("Brush color", "#fff")
-                
-                drawing_mode = "freedraw"
-                
-                # Create canvas with background image
-                canvas_result = st_canvas(
-                    fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
-                    stroke_width=stroke_width,
-                    stroke_color=stroke_color,
-                    drawing_mode=drawing_mode,
-                    background_color="",  # Transparent background
-                    background_image=img if img_array.shape[-1] == 3 else None,  # Only pass RGB images
-                    height=canvas_height,
-                    width=canvas_width,
-                    key="canvas",
-                )
+                if img:
+                    # Add drawing canvas
+                    col_brush1, col_brush2 = st.columns(2)
+                    with col_brush1:
+                        stroke_width = st.slider("Brush width", 1, 50, 20)
+                    with col_brush2:
+                        stroke_color = st.color_picker("Brush color", "#fff")
+                    
+                    drawing_mode = "freedraw"
+                    
+                    # Create canvas with background image
+                    canvas_result = st_canvas(
+                        fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
+                        stroke_width=stroke_width,
+                        stroke_color=stroke_color,
+                        drawing_mode=drawing_mode,
+                        background_color="",  # Transparent background
+                        background_image=img,  # Pass PIL Image directly
+                        height=canvas_height,
+                        width=canvas_width,
+                        key="canvas",
+                    )
+                else:
+                    st.error("Error processing image.")
                 
                 # --- RESULT DISPLAY SECTION (Moved to Left) ---
-                if st.session_state.edited_image:
+                if st.session_state.gen_fill_result:
                     st.divider()
                     st.markdown("### ✨ Generated Result")
-                    st.image(st.session_state.edited_image, caption="Generated Result", use_column_width=True)
-                    image_data = download_image(st.session_state.edited_image)
+                    st.image(st.session_state.gen_fill_result, caption="Generated Result", use_column_width=True)
+                    image_data = download_image(st.session_state.gen_fill_result)
                     if image_data:
                         st.download_button(
                             "⬇️ Download Result",
@@ -750,26 +778,31 @@ def main():
                             "image/png",
                             use_container_width=True
                         )
-                elif st.session_state.pending_urls:
+                elif st.session_state.gen_fill_pending:
                     st.divider()
                     st.info("Generation in progress... check status on the right.")
 
             with col2:
-                st.markdown("### ⚙️ Generation Settings")
-                
-                # Options for generation
-                prompt = st.text_area("Prompt", placeholder="Describe what to generate...")
-                negative_prompt = st.text_area("Negative Prompt", placeholder="What to avoid using...", height=68)
-                
-                with st.expander("Advanced Settings", expanded=True):
-                    num_results = st.slider("Number of variations", 1, 4, 1)
-                    seed = st.number_input("Seed", min_value=0, value=0, help="Set to >0 for reproducibility")
-                    sync_mode = st.checkbox("Synchronous Mode", False, help="Wait for results")
-                    content_moderation = st.checkbox("Content Moderation", False)
+                # Wrap generation controls in a form to prevent re-runs while typing
+                with st.form("gen_fill_form"):
+                    st.markdown("### ⚙️ Generation Settings")
+                    
+                    # Options for generation
+                    prompt = st.text_area("Prompt", placeholder="Describe what to generate...")
+                    negative_prompt = st.text_area("Negative Prompt", placeholder="What to avoid using...", height=68)
+                    
+                    with st.expander("Advanced Settings", expanded=True):
+                        num_results = st.slider("Number of variations", 1, 4, 1)
+                        seed = st.number_input("Seed", min_value=0, value=0, help="Set to >0 for reproducibility")
+                        sync_mode = st.checkbox("Synchronous Mode", False, help="Wait for results")
+                        content_moderation = st.checkbox("Content Moderation", False)
 
-                st.divider()
+                    st.divider()
 
-                if st.button("🎨 Generate", type="primary", use_container_width=True):
+                    # Form Submit Button
+                    submitted = st.form_submit_button("🎨 Generate", type="primary", use_container_width=True)
+
+                if submitted:
                     if not prompt:
                         st.error("Please enter a prompt.")
                     elif canvas_result.image_data is None:
@@ -804,18 +837,18 @@ def main():
                                 if result:
                                     if sync_mode:
                                         if "urls" in result and result["urls"]:
-                                            st.session_state.edited_image = result["urls"][0]
+                                            st.session_state.gen_fill_result = result["urls"][0]
                                             if len(result["urls"]) > 1:
-                                                st.session_state.generated_images = result["urls"]
+                                                st.session_state.gen_fill_urls = result["urls"]
                                             st.success("✨ Done!")
                                             st.rerun()
                                         elif "result_url" in result:
-                                            st.session_state.edited_image = result["result_url"]
+                                            st.session_state.gen_fill_result = result["result_url"]
                                             st.success("✨ Done!")
                                             st.rerun()
                                     else:
                                         if "urls" in result:
-                                            st.session_state.pending_urls = result["urls"][:num_results]
+                                            st.session_state.gen_fill_pending = result["urls"][:num_results]
                                             # Create containers for status
                                             status_container = st.empty()
                                             
@@ -823,7 +856,7 @@ def main():
                                             status_container.info(f"Accepted! Waiting for results...")
                                             
                                             # Try automatic checking
-                                            if auto_check_images(status_container):
+                                            if auto_check_images(status_container, "gen_fill_pending", "gen_fill_result", "gen_fill_urls"):
                                                 st.rerun()
                                             
                                             # If still pending after auto-check
@@ -833,10 +866,10 @@ def main():
                                 st.error(f"Error: {str(e)}")
                 
                 # Status for Async Mode (if not clicked just now)
-                if st.session_state.pending_urls:
-                    st.info(f"Processing {len(st.session_state.pending_urls)} images...")
+                if st.session_state.gen_fill_pending:
+                    st.info(f"Processing {len(st.session_state.gen_fill_pending)} images...")
                     if st.button("🔄 Refresh Status", key="gen_refresh"):
-                         if check_generated_images():
+                         if check_generated_images("gen_fill_pending", "gen_fill_result", "gen_fill_urls"):
                              st.success("Ready!")
                              st.rerun()
                          else:
@@ -854,47 +887,35 @@ def main():
             col1, col2 = st.columns(2)
             
             with col1:
-                # Display original image
-                st.image(uploaded_file, caption="Original Image", use_column_width=True)
+                st.subheader("Input & Mask")
                 
-                # Get image dimensions for canvas
-                img = Image.open(uploaded_file)
-                img_width, img_height = img.size
+                # Use cached image processing
+                img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=600)
                 
-                # Calculate aspect ratio and set canvas height
-                aspect_ratio = img_height / img_width
-                canvas_width = min(img_width, 800)  # Max width of 800px
-                canvas_height = int(canvas_width * aspect_ratio)
-                
-                # Resize image to match canvas dimensions
-                img = img.resize((canvas_width, canvas_height))
-                
-                # Convert to RGB if necessary
-                if img.mode != 'RGB':
-                    img = img.convert('RGB')
-                
-                # Add drawing canvas using Streamlit's drawing canvas component
-                stroke_width = st.slider("Brush width", 1, 50, 20, key="erase_brush_width")
-                stroke_color = st.color_picker("Brush color", "#fff", key="erase_brush_color")
-                
-                # Create canvas with background image
-                canvas_result = st_canvas(
-                    fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
-                    stroke_width=stroke_width,
-                    stroke_color=stroke_color,
-                    background_color="",  # Transparent background
-                    background_image=img,  # Pass PIL Image directly
-                    drawing_mode="freedraw",
-                    height=canvas_height,
-                    width=canvas_width,
-                    key="erase_canvas",
-                )
+                if img:
+                    # Add drawing canvas using Streamlit's drawing canvas component
+                    stroke_width = st.slider("Brush width", 1, 50, 20, key="erase_brush_width")
+                    stroke_color = st.color_picker("Brush color", "#fff", key="erase_brush_color")
+                    
+                    # Create canvas with background image
+                    canvas_result = st_canvas(
+                        fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
+                        stroke_width=stroke_width,
+                        stroke_color=stroke_color,
+                        background_color="",  # Transparent background
+                        background_image=img,  # Pass PIL Image directly
+                        drawing_mode="freedraw",
+                        height=canvas_height,
+                        width=canvas_width,
+                        key="erase_canvas",
+                    )
+                else:
+                    st.error("Error processing image.")
                 
                 # Options for erasing
-                st.subheader("Erase Options")
                 content_moderation = st.checkbox("Enable Content Moderation", False, key="erase_content_mod")
                 
-                if st.button("🎨 Erase Selected Area", key="erase_btn"):
+                if st.button("🎨 Erase Selected Area", key="erase_btn", type="primary", use_container_width=True):
                     if not canvas_result.image_data is None:
                         with st.spinner("Erasing selected area..."):
                             try:
@@ -913,8 +934,9 @@ def main():
                                 
                                 if result:
                                     if "result_url" in result:
-                                        st.session_state.edited_image = result["result_url"]
+                                        st.session_state.erase_result = result["result_url"]
                                         st.success("✨ Area erased successfully!")
+                                        st.rerun()
                                     else:
                                         st.error("No result URL in the API response. Please try again.")
                             except Exception as e:
@@ -925,17 +947,21 @@ def main():
                         st.warning("Please draw on the image to select the area to erase.")
             
             with col2:
-                if st.session_state.edited_image:
-                    st.image(st.session_state.edited_image, caption="Result", use_column_width=True)
-                    image_data = download_image(st.session_state.edited_image)
+                st.subheader("Result")
+                if st.session_state.erase_result:
+                    st.image(st.session_state.erase_result, caption="Result", use_column_width=True)
+                    image_data = download_image(st.session_state.erase_result)
                     if image_data:
                         st.download_button(
                             "⬇️ Download Result",
                             image_data,
                             "erased_image.png",
                             "image/png",
-                            key="erase_download"
+                            key="erase_download",
+                            use_container_width=True
                         )
+                else:
+                    st.info("Result will appear here.")
 
 if __name__ == "__main__":
     main() 
