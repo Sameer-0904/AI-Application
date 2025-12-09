@@ -762,15 +762,19 @@ def main():
                     drawing_mode = "freedraw"
                     
                     # Create canvas with background image
+                    # Use unique key based on filename to force re-render when image changes
+                    canvas_key = f"canvas_{uploaded_file.name}_{is_mobile}"
+                    
                     canvas_result = st_canvas(
                         fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
                         drawing_mode=drawing_mode,
+                        background_color="rgba(0, 0, 0, 0)",  # Transparent background
                         background_image=img,  # Pass PIL Image directly
                         height=canvas_height,
                         width=canvas_width,
-                        key="canvas",
+                        key=canvas_key,
                     )
                 else:
                     st.error("Error processing image.")
@@ -909,15 +913,18 @@ def main():
                     stroke_color = st.color_picker("Brush color", "#fff", key="erase_brush_color")
                     
                     # Create canvas with background image
+                    erase_key = f"erase_canvas_{uploaded_file.name}_{is_mobile}"
+                    
                     canvas_result = st_canvas(
                         fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
+                        background_color="rgba(0, 0, 0, 0)",  # Transparent background
                         background_image=img,  # Pass PIL Image directly
                         drawing_mode="freedraw",
                         height=canvas_height,
                         width=canvas_width,
-                        key="erase_canvas",
+                        key=erase_key,
                     )
                 else:
                     st.error("Error processing image.")
