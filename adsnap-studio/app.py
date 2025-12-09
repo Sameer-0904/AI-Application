@@ -769,6 +769,14 @@ def main():
                     with b_col2:
                          st.write("") # Spacer
                     
+                    # Debug/Fallback: Show the image directly to ensure it's loaded
+                    # This helps confirming if the issue is with st_canvas or the image itself
+                    # st.image(img, caption="Background Preview", use_column_width=True) 
+                    # ^ Commented out to reduce clutter if canvas works, but user said it's not showing.
+                    # Let's add it explicitly for now:
+                    st.caption("Background Image Preview:")
+                    st.image(img, use_column_width=True)
+
                     # Canvas
                     # UNIQUE KEY is critical for re-rendering when file changes
                     canvas_key = f"gf_canvas_{uploaded_file.name}_{is_mobile}"
@@ -777,7 +785,7 @@ def main():
                         fill_color="rgba(255, 255, 255, 0.0)",
                         stroke_width=stroke_width,
                         stroke_color="#ffffff",
-                        background_color="#ffffff", # Fallback to white if image fails, but image should overlay
+                        # Removed background_color to rely on default transparency
                         background_image=img,
                         update_streamlit=True,
                         height=canvas_height,
@@ -869,12 +877,16 @@ def main():
                 if img:
                     brush_width = st.slider("Brush Size", 5, 50, 20, key="er_brush")
                     
+                    # Debug/Fallback preview
+                    st.caption("Background Image Preview:")
+                    st.image(img, use_column_width=True)
+
                     erase_key = f"erase_canvas_{uploaded_file.name}_{is_mobile}"
                     canvas_result = st_canvas(
                         fill_color="rgba(255, 255, 255, 0.0)",
                         stroke_width=brush_width,
                         stroke_color="#ffffff",
-                        background_color="#ffffff",
+                        # Removed background_color
                         background_image=img,
                         update_streamlit=True,
                         height=canvas_height,
