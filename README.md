@@ -98,4 +98,4 @@ Developed by **Sameer Prajapati**
 Email: sameerprajapati0904@gmail.com
 
 
-**This app is not working properly on phone right now, I will fix it later.**
+**Note:** **This app is not working properly on phone right now, I will fix it later.**
