@@ -295,6 +295,10 @@ def main():
         """)
         st.markdown("---")
         st.caption("Developed by Sameer Prajapati")
+        
+        st.divider()
+        is_mobile = st.checkbox("📱 Mobile Optimized View", value=False, help="Enable this to fit the canvas on mobile screens.")
+        canvas_max_width = 350 if is_mobile else 600
 
     # Main tabs
     tabs = st.tabs([
@@ -742,7 +746,11 @@ def main():
                 st.markdown("### 🖼️ Input & Result")
                 
                 # Use cached image processing
-                img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=600)
+                img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=canvas_max_width)
+                
+                # Constant visibility of Original Image
+                with st.expander("👀 View Original Image", expanded=True):
+                    st.image(uploaded_file, caption="Original Input", use_column_width=True)
                 
                 if img:
                     # Add drawing canvas
@@ -895,7 +903,11 @@ def main():
                 st.subheader("Input & Mask")
                 
                 # Use cached image processing
-                img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=600)
+                img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=canvas_max_width)
+                
+                # Constant visibility of Original Image
+                with st.expander("👀 View Original Image", expanded=True):
+                    st.image(uploaded_file, caption="Original Input", use_column_width=True)
                 
                 if img:
                     # Add drawing canvas using Streamlit's drawing canvas component
