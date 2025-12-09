@@ -70,7 +70,10 @@ def initialize_session_state():
     # st.secrets is preferred for deployment.
     if 'api_key' not in st.session_state:
         # Use st.secrets to securely load the key
-        bria_key = st.secrets.get('BRIA_API_KEY')
+        try:
+            bria_key = st.secrets.get('BRIA_API_KEY')
+        except FileNotFoundError:
+            bria_key = None
         st.session_state.api_key = bria_key if bria_key else None
         
     # Generate Images Tab State
@@ -748,10 +751,6 @@ def main():
                 # Use cached image processing
                 img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=canvas_max_width)
                 
-                # Constant visibility of Original Image
-                with st.expander("👀 View Original Image", expanded=True):
-                    st.image(uploaded_file, caption="Original Input", use_column_width=True)
-                
                 if img:
                     # Add drawing canvas
                     col_brush1, col_brush2 = st.columns(2)
@@ -768,7 +767,6 @@ def main():
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
                         drawing_mode=drawing_mode,
-                        background_color="",  # Transparent background
                         background_image=img,  # Pass PIL Image directly
                         height=canvas_height,
                         width=canvas_width,
@@ -905,10 +903,6 @@ def main():
                 # Use cached image processing
                 img, canvas_width, canvas_height = process_image_for_canvas(uploaded_file.getvalue(), max_width=canvas_max_width)
                 
-                # Constant visibility of Original Image
-                with st.expander("👀 View Original Image", expanded=True):
-                    st.image(uploaded_file, caption="Original Input", use_column_width=True)
-                
                 if img:
                     # Add drawing canvas using Streamlit's drawing canvas component
                     stroke_width = st.slider("Brush width", 1, 50, 20, key="erase_brush_width")
@@ -919,7 +913,6 @@ def main():
                         fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
-                        background_color="",  # Transparent background
                         background_image=img,  # Pass PIL Image directly
                         drawing_mode="freedraw",
                         height=canvas_height,
