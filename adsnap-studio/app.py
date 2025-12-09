@@ -186,7 +186,7 @@ def auto_check_images(status_container, pending_key, result_key, list_key=None):
         attempt += 1
     return False
 
-@st.cache_data
+# Removed @st.cache_data to prevent potential image reference issues
 def process_image_for_canvas(image_bytes, max_width=600):
     """Process image for canvas: resize and convert to RGB."""
     try:
@@ -203,9 +203,9 @@ def process_image_for_canvas(image_bytes, max_width=600):
              new_width = img_width
              new_height = img_height
              
-             
-        if image.mode != "RGBA":
-            image = image.convert("RGBA")
+        # Force RGB to avoid alpha channel rendering issues
+        if image.mode != "RGB":
+            image = image.convert("RGB")
             
         return image, new_width, new_height
     except Exception as e:
@@ -740,8 +740,12 @@ def main():
         
         uploaded_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"], key="fill_upload")
         if uploaded_file:
-            # Create columns for layout
-            col1, col2 = st.columns(2)
+            # Custom Layout: Stacked for mobile, Side-by-side for Desktop
+            if is_mobile:
+                col1 = st.container()
+                col2 = st.container()
+            else:
+                col1, col2 = st.columns(2)
             
             # Initialize canvas variables to ensure scope access
             canvas_result = None
@@ -771,6 +775,7 @@ def main():
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
                         drawing_mode=drawing_mode,
+                        background_color="#ffffff",  # White background logic
                         background_image=img,  # Pass PIL Image directly
                         height=canvas_height,
                         width=canvas_width,
@@ -899,7 +904,12 @@ def main():
         
         uploaded_file = st.file_uploader("Upload Image", type=["png", "jpg", "jpeg"], key="erase_upload")
         if uploaded_file:
-            col1, col2 = st.columns(2)
+            # Custom Layout: Stacked for mobile, Side-by-side for Desktop
+            if is_mobile:
+                col1 = st.container()
+                col2 = st.container()
+            else:
+                col1, col2 = st.columns(2)
             
             with col1:
                 st.subheader("Input & Mask")
@@ -919,6 +929,7 @@ def main():
                         fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
+                        background_color="#ffffff",  # White background logic
                         background_image=img,  # Pass PIL Image directly
                         drawing_mode="freedraw",
                         height=canvas_height,
