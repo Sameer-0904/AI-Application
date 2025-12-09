@@ -1,17 +1,18 @@
-# 🎨 AdSnap Studio
+# 🎨 Visionary
 
-A powerful Streamlit app for generating professional product ads using Bria AI's advanced image generation and manipulation APIs.
+A powerful Streamlit app for advanced image generation and manipulation using Bria AI.
 
 ## 🌟 Features
 
-- 🖼️ Generate HD product images from text prompts
-- 🎯 Remove backgrounds with custom colors
-- 🌅 Add realistic shadows
-- 🏠 Create lifestyle shots with text or reference images
-- ✨ AI-powered prompt enhancement
-- 📝 Optional CTA text overlay
-- 🎮 Intuitive UI controls
-- 💾 Easy image download
+- 🖼️ **Text-to-Image Generation**: Create stunning HD visuals from text prompts with various artistic styles (Realistic, Cartoon, Oil Painting, etc.) and aspect ratios.
+- 🛍️ **Product Photography Studio**:
+  - **Create Packshot**: Professional manufacturing shots with custom background colors and automatic background removal.
+  - **Add Shadow**: Advanced shadow control with presets (Soft Drop, Hard Cast, Floating) and parametric adjustments (intensity, blur, direction).
+  - **Lifestyle Shot**: Place products in any scene using text generation or reference images with smart placement.
+- 🖌️ **Generative Fill**: Modify specific areas of an image by painting a mask and describing changes (inpainting).
+- 🧼 **Erase Elements**: Clean up images by removing unwanted objects (magic eraser).
+- ✨ **AI Prompt Enhancement**: Automatically refine your prompts for better generation results.
+- � **Advanced Controls**: Fine-tune everything from shadow blur to generation seeds.
 
 ## 🚀 Quick Start
 
@@ -38,25 +39,40 @@ streamlit run app.py
 
 ## 💡 Usage
 
-1. Enter a product description or upload an image
-2. Configure generation options in the sidebar:
-   - Enhance prompt with AI
-   - Remove background
-   - Add shadows
-   - Generate lifestyle shots
-3. Adjust advanced settings like background color and shadow intensity
-4. Click "Generate Ad" to create your images
-5. Download the results
+The app is organized into four main studios:
+
+### 1. 🎨 Generate Image
+- Enter a text prompt describing the image you want.
+- Use **"✨ Enhance Prompt"** to let AI improve your description.
+- Select a style (e.g., Realistic, Cyberpunk) and aspect ratio.
+- Click **"Generate Images"**.
+
+### 2. 🛍️ Product Photography
+- **Upload** your product image.
+- Choose a mode:
+    - **Create Packshot**: Clean up the background and set a new color.
+    - **Add Shadow**: Apply realistic shadows (Drop, Cast, Floating).
+    - **Lifestyle Shot**: Place your product in a new scene using a text description or a reference image.
+
+### 3. 🎨 Generative Fill
+- **Upload** an image.
+- **Draw** a mask over the area you want to change.
+- **Type** a prompt describing what should fill that area.
+- Click **"Generate"**.
+
+### 4. 🧼 Erase Elements
+- **Upload** an image.
+- **Brush** over the object you want to remove.
+- Click **"Erase Selected Area"**.
 
 ## 🔧 Configuration
 
-The app supports various configuration options through the UI:
+**Visionary** offers granular control:
 
-- **Prompt Enhancement**: Improve your text prompts with AI
-- **Background Removal**: Remove backgrounds with custom colors
-- **Shadow Effects**: Add realistic shadows with adjustable intensity
-- **Lifestyle Shots**: Place products in context using text or reference images
-- **CTA Text**: Add optional call-to-action text overlays
+- **Styles**: Choose from diverse art styles for generation.
+- **Shadows**: Customize shadow angle, blur, and opacity.
+- **Placement**: Manually or automatically positioning products in lifestyle shots.
+- **Content Moderation**: Toggle safety filters for strict or relaxed generation.
 
 ## 🤝 Contributing
 
@@ -74,3 +90,9 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - [Bria AI](https://bria.ai) for their powerful image generation APIs
 - [Streamlit](https://streamlit.io) for the amazing web framework 
+
+## 📞 Contact
+
+Developed by **Sameer Prajapati** 
+
+Email: sameerprajapati0904@gmail.com

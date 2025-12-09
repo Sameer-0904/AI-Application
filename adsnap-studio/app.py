@@ -28,7 +28,7 @@ warnings.filterwarnings("ignore", category=RuntimeWarning)
 
 # Configure Streamlit page
 st.set_page_config(
-    page_title="AdSnap Studio",
+    page_title="Visionary",
     page_icon="🎨",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -272,15 +272,14 @@ def main():
     </style>
     """, unsafe_allow_html=True)
 
-    st.title("AdSnap Studio")
+    st.title("Visionary")
     initialize_session_state()
     # Sidebar Info
     with st.sidebar:
-        st.header("⚙️ Settings")
         
         st.markdown("""
         ### ℹ️ About
-        **AdSnap Studio** is your AI-powered creative companion.
+        **Visionary** is your AI-powered creative companion.
         
         **Features:**
         - 🎨 Text-to-Image Generation
