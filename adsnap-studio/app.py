@@ -203,8 +203,9 @@ def process_image_for_canvas(image_bytes, max_width=600):
              new_width = img_width
              new_height = img_height
              
-        if image.mode != "RGB":
-            image = image.convert("RGB")
+             
+        if image.mode != "RGBA":
+            image = image.convert("RGBA")
             
         return image, new_width, new_height
     except Exception as e:
@@ -770,7 +771,6 @@ def main():
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
                         drawing_mode=drawing_mode,
-                        background_color="rgba(0, 0, 0, 0)",  # Transparent background
                         background_image=img,  # Pass PIL Image directly
                         height=canvas_height,
                         width=canvas_width,
@@ -919,7 +919,6 @@ def main():
                         fill_color="rgba(255, 255, 255, 0.0)",  # Transparent fill
                         stroke_width=stroke_width,
                         stroke_color=stroke_color,
-                        background_color="rgba(0, 0, 0, 0)",  # Transparent background
                         background_image=img,  # Pass PIL Image directly
                         drawing_mode="freedraw",
                         height=canvas_height,
