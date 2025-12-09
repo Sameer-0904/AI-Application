@@ -36,25 +36,25 @@ st.set_page_config(
 
 # Load environment variables
 # Load environment variables
-from dotenv import load_dotenv, find_dotenv
+#from dotenv import load_dotenv, find_dotenv
 # Try locating .env file explicitly
-dotenv_path = find_dotenv()
-if not dotenv_path:
+#dotenv_path = find_dotenv()
+#if not dotenv_path:
     # Fallback: try looking in the current directory and parent directory of the script
-    current_dir = os.path.dirname(os.path.abspath(__file__))
-    potential_paths = [
-        os.path.join(current_dir, '.env'),
-        os.path.join(os.path.dirname(current_dir), '.env')
-    ]
-    for path in potential_paths:
-        if os.path.exists(path):
-            dotenv_path = path
-            break
+    #current_dir = os.path.dirname(os.path.abspath(__file__))
+    #potential_paths = [
+        #os.path.join(current_dir, '.env'),
+        #os.path.join(os.path.dirname(current_dir), '.env')
+    #]
+    #for path in potential_paths:
+        #if os.path.exists(path):
+            #dotenv_path = path
+            #break
 
-if dotenv_path:
-    load_dotenv(dotenv_path, verbose=True)
-else:
-    load_dotenv(verbose=True)
+#if dotenv_path:
+    #load_dotenv(dotenv_path, verbose=True)
+#else:
+    #load_dotenv(verbose=True)
 
 # print("Loading environment variables from:", dotenv_path if dotenv_path else "default locations")
 
@@ -62,15 +62,21 @@ else:
 # api_key = os.getenv("BRIA_API_KEY")
 
 
+# --- START OF MODIFIED SECTION (Replaces dotenv and os.getenv loading) ---
+
 def initialize_session_state():
-    """Initialize session state variables."""
+    """Initialize session state variables, loading API key from st.secrets."""
+    # Check if the key exists in st.secrets and load it.
+    # st.secrets is preferred for deployment.
     if 'api_key' not in st.session_state:
-        env_key = os.getenv('BRIA_API_KEY')
-        st.session_state.api_key = env_key if env_key else None
+        # Use st.secrets to securely load the key
+        bria_key = st.secrets.get('BRIA_API_KEY')
+        st.session_state.api_key = bria_key if bria_key else None
         
     # Generate Images Tab State
     if 'txt2img_urls' not in st.session_state:
         st.session_state.txt2img_urls = []
+    # ... (rest of the session state initialization remains the same)
     if 'txt2img_result' not in st.session_state:
         st.session_state.txt2img_result = None
     if 'enhanced_prompt' not in st.session_state:
