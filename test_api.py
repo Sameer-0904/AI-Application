@@ -3,7 +3,7 @@ import os
 
 # Configuration
 API_URL = "http://localhost:8000"
-API_KEY = "c06b184d54534aa5b7790242fc9e156d" # Replace with your actual key
+API_KEY = "c06b184d54534aa5b7790242fc9e" # Replace with your actual156d key
 
 def test_root():
     print(f"Testing connectivity to {API_URL}...")
