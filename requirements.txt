@@ -3,4 +3,7 @@ requests
 python-dotenv
 Pillow
 python-magic
-streamlit-drawable-canvas 
+streamlit-drawable-canvas
+fastapi
+uvicorn
+python-multipart 
