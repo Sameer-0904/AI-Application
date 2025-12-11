@@ -1,4 +1,7 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 import io
 from typing import Optional, List
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks
@@ -42,7 +45,15 @@ class ImageGenerationRequest(BaseModel):
 
 class EnhancePromptRequest(BaseModel):
     prompt: str
-    api_key: str
+    api_key: Optional[str] = None
+
+def get_api_key(api_key: Optional[str] = None) -> str:
+    if api_key:
+        return api_key
+    env_key = os.getenv("BRIA_API_KEY")
+    if env_key:
+        return env_key
+    raise HTTPException(status_code=401, detail="API Key not found. Please provide it in the request or set BRIA_API_KEY environment variable.")
 
 # --- Endpoints ---
 
@@ -53,7 +64,7 @@ async def root():
 @app.post("/generate-image")
 async def api_generate_image(
     prompt: str = Form(...),
-    api_key: str = Form(...),
+    api_key: Optional[str] = Form(None),
     num_results: int = Form(1),
     aspect_ratio: str = Form("1:1"),
     enhance_image: bool = Form(True),
@@ -64,12 +75,18 @@ async def api_generate_image(
     """
     try:
         final_prompt = prompt
-        if style and style != "Realistic":
-            final_prompt = f"{prompt}, in {style.lower()} style"
+        is_realistic = style == "Realistic"
+        
+        if style and not is_realistic:
+            # For artistic styles, put the style first to have stronger effect
+            final_prompt = f"{style} style artwork: {prompt}"
+            # Disable automatic enhancement for artistic styles to preserve the look
+            enhance_image = False
             
+        final_key = get_api_key(api_key)
         result = generate_hd_image(
             prompt=final_prompt,
-            api_key=api_key,
+            api_key=final_key,
             num_results=num_results,
             aspect_ratio=aspect_ratio,
             sync=True,
@@ -85,13 +102,14 @@ async def api_generate_image(
 @app.post("/enhance-prompt")
 async def api_enhance_prompt(
     prompt: str = Form(...),
-    api_key: str = Form(...)
+    api_key: Optional[str] = Form(None)
 ):
     """
     Enhance a simple prompt using AI.
     """
     try:
-        result = enhance_prompt(api_key, prompt)
+        final_key = get_api_key(api_key)
+        result = enhance_prompt(final_key, prompt)
         return {"enhanced_prompt": result}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
@@ -99,7 +117,7 @@ async def api_enhance_prompt(
 @app.post("/product/packshot")
 async def api_create_packshot(
     file: UploadFile = File(...),
-    api_key: str = Form(...),
+    api_key: Optional[str] = Form(None),
     background_color: str = Form("#FFFFFF"),
     sku: Optional[str] = Form(None),
     force_rmbg: bool = Form(False),
@@ -122,8 +140,9 @@ async def api_create_packshot(
         # We'll stick to calling create_packshot directly for now. 
         # If the user needs explicit background removal, we should expose that service too.
         
+        final_key = get_api_key(api_key)
         result = create_packshot(
-            api_key=api_key,
+            api_key=final_key,
             image_data=image_data,
             background_color=background_color,
             sku=sku,
@@ -137,7 +156,7 @@ async def api_create_packshot(
 @app.post("/product/shadow")
 async def api_add_shadow(
     file: UploadFile = File(...),
-    api_key: str = Form(...),
+    api_key: Optional[str] = Form(None),
     shadow_type: str = Form("regular"), # 'regular' or 'float'
     background_color: Optional[str] = Form(None),
     shadow_color: str = Form("#000000"),
@@ -155,8 +174,9 @@ async def api_add_shadow(
     try:
         image_data = await file.read()
         
+        final_key = get_api_key(api_key)
         result = add_shadow(
-            api_key=api_key,
+            api_key=final_key,
             image_data=image_data,
             shadow_type=shadow_type,
             background_color=background_color,
@@ -175,7 +195,7 @@ async def api_add_shadow(
 @app.post("/product/lifestyle-text")
 async def api_lifestyle_text(
     file: UploadFile = File(...),
-    api_key: str = Form(...),
+    api_key: Optional[str] = Form(None),
     scene_description: str = Form(...),
     placement_type: str = Form("original"), # original, automatic, manual_placement
     manual_positions: Optional[str] = Form(None) # Comma separated list
@@ -190,8 +210,9 @@ async def api_lifestyle_text(
         if manual_positions:
             positions = [p.strip().lower().replace(" ", "_") for p in manual_positions.split(",")]
             
+        final_key = get_api_key(api_key)
         result = lifestyle_shot_by_text(
-            api_key=api_key,
+            api_key=final_key,
             image_data=image_data,
             scene_description=scene_description,
             placement_type=placement_type,
@@ -208,7 +229,7 @@ async def api_lifestyle_text(
 async def api_lifestyle_image(
     product_file: UploadFile = File(...),
     ref_file: UploadFile = File(...),
-    api_key: str = Form(...),
+    api_key: Optional[str] = Form(None),
     placement_type: str = Form("original"),
     manual_positions: Optional[str] = Form(None)
 ):
@@ -223,8 +244,9 @@ async def api_lifestyle_image(
         if manual_positions:
             positions = [p.strip().lower().replace(" ", "_") for p in manual_positions.split(",")]
             
+        final_key = get_api_key(api_key)
         result = lifestyle_shot_by_image(
-            api_key=api_key,
+            api_key=final_key,
             image_data=product_data,
             reference_image=ref_data,
             placement_type=placement_type,
@@ -243,7 +265,7 @@ async def api_lifestyle_image(
 async def api_generative_fill(
     file: UploadFile = File(...),
     mask_file: UploadFile = File(...),
-    api_key: str = Form(...),
+    api_key: Optional[str] = Form(None),
     prompt: str = Form(...),
     expansion_amount: int = Form(0)
 ):
@@ -258,8 +280,9 @@ async def api_generative_fill(
         # Checking imports: services.generative_fill
         # Usually these take bytes.
         
+        final_key = get_api_key(api_key)
         result = generative_fill(
-            api_key=api_key,
+            api_key=final_key,
             image_data=image_data,
             mask_data=mask_data,
             prompt=prompt,
@@ -274,7 +297,7 @@ async def api_generative_fill(
 async def api_erase(
     file: UploadFile = File(...),
     mask_file: UploadFile = File(...),
-    api_key: str = Form(...)
+    api_key: Optional[str] = Form(None)
 ):
     """
     Erase objects from image using mask.
@@ -283,12 +306,15 @@ async def api_erase(
         image_data = await file.read()
         mask_data = await mask_file.read()
         
-        result = erase_foreground(
-            api_key=api_key,
+        final_key = get_api_key(api_key)
+        # Use generative fill with a removal prompt to act as an object eraser
+        result = generative_fill(
+            api_key=final_key,
             image_data=image_data,
             mask_data=mask_data,
+            prompt="remove the object and fill with background texture",
             num_results=1,
-            sync=True,
+            sync=True
         )
         return result
     except Exception as e:

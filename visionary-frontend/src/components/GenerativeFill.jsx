@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload, FiDownload, FiRefreshCw } from 'react-icons/fi';
 
 const GenerativeFill = () => {
-    const apiKey = import.meta.env.VITE_BRIA_API_KEY;
     const [image, setImage] = useState(null);
     const [imageSrc, setImageSrc] = useState(null);
     const [brushSize, setBrushSize] = useState(20);
@@ -67,7 +66,7 @@ const GenerativeFill = () => {
     };
 
     const handleProcess = async () => {
-        if (!image || !apiKey) return;
+        if (!image) return;
         if (!prompt) return;
 
         setLoading(true);
@@ -89,7 +88,6 @@ const GenerativeFill = () => {
             const formData = new FormData();
             formData.append('file', image);
             formData.append('mask_file', maskBlob, 'mask.png');
-            formData.append('api_key', apiKey);
             formData.append('prompt', prompt);
 
             const response = await fetch('/api/edit/generative-fill', {

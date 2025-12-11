@@ -63,8 +63,8 @@ def generate_hd_image(
         data["medium"] = medium
     if prompt_enhancement:
         data["prompt_enhancement"] = prompt_enhancement
-    if enhance_image:
-        data["enhance_image"] = enhance_image
+    # Always send enhance_image if provided (True or False), as API might default to True
+    data["enhance_image"] = enhance_image
     if content_moderation:
         data["content_moderation"] = content_moderation
     if ip_signal:

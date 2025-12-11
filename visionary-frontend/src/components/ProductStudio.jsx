@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiUpload, FiBox, FiLayers, FiCamera, FiDownload } from 'react-icons/fi';
 
-const ProductStudio = ({ apiKey }) => {
+const ProductStudio = () => {
     const [image, setImage] = useState(null);
     const [preview, setPreview] = useState(null);
     const [mode, setMode] = useState('packshot'); // packshot, shadow, lifestyle
@@ -27,14 +27,13 @@ const ProductStudio = ({ apiKey }) => {
     };
 
     const handleProcess = async () => {
-        if (!image || !apiKey) return;
+        if (!image) return;
         setLoading(true);
         setResult(null);
 
         try {
             const formData = new FormData();
             formData.append('file', image);
-            formData.append('api_key', apiKey);
 
             let endpoint = '';
 

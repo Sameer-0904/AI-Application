@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { FiDownload, FiMaximize2, FiCpu } from 'react-icons/fi';
 
-const ImageGenerator = ({ apiKey }) => {
+const ImageGenerator = () => {
     const [prompt, setPrompt] = useState('');
     const [loading, setLoading] = useState(false);
     const [result, setResult] = useState(null);
@@ -11,13 +11,35 @@ const ImageGenerator = ({ apiKey }) => {
     const [aspectRatio, setAspectRatio] = useState('1:1');
     const [numImages, setNumImages] = useState(1);
     const [style, setStyle] = useState('Realistic');
+    const [enhancing, setEnhancing] = useState(false);
+
+    const handleEnhancePrompt = async () => {
+        if (!prompt) return;
+        setEnhancing(true);
+        try {
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+
+            const response = await fetch('/api/enhance-prompt', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) throw new Error('Failed to enhance prompt');
+            const data = await response.json();
+            if (data.enhanced_prompt) {
+                setPrompt(data.enhanced_prompt);
+            }
+        } catch (err) {
+            console.error(err);
+            // Optional: setError(err.message);
+        } finally {
+            setEnhancing(false);
+        }
+    };
 
     const handleGenerate = async () => {
         if (!prompt) return;
-        if (!apiKey) {
-            setError('Please set your API Key in Settings first.');
-            return;
-        }
 
         setLoading(true);
         setError('');
@@ -25,7 +47,6 @@ const ImageGenerator = ({ apiKey }) => {
         try {
             const formData = new FormData();
             formData.append('prompt', prompt);
-            formData.append('api_key', apiKey);
             formData.append('num_results', numImages);
             formData.append('aspect_ratio', aspectRatio);
             formData.append('style', style);
@@ -88,8 +109,12 @@ const ImageGenerator = ({ apiKey }) => {
                             }}
                         />
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
-                            <button style={{ color: 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent' }}>
-                                <FiMaximize2 /> Enhance Prompt
+                            <button
+                                onClick={handleEnhancePrompt}
+                                disabled={enhancing || !prompt}
+                                style={{ color: enhancing ? 'var(--color-primary)' : 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', cursor: 'pointer', border: 'none' }}
+                            >
+                                <FiMaximize2 /> {enhancing ? 'Enhancing...' : 'Enhance Prompt'}
                             </button>
                             <button
                                 className="btn-primary"
@@ -112,7 +137,7 @@ const ImageGenerator = ({ apiKey }) => {
                     {result && (
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '1rem' }}>
                             {result.map((url, idx) => (
-                                <div key={idx} className="glass-panel" style={{ overflow: 'hidden', position: 'relative', aspectRatio: '1/1' }}>
+                                <div key={idx} className="glass-panel" style={{ overflow: 'hidden', position: 'relative' }}>
                                     <img src={url} alt={`Result ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <a
                                         href={url}

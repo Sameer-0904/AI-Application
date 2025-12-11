@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload, FiDownload, FiRefreshCw } from 'react-icons/fi';
 
 const ObjectEraser = () => {
-    const apiKey = import.meta.env.VITE_BRIA_API_KEY;
     const [image, setImage] = useState(null);
     const [imageSrc, setImageSrc] = useState(null);
     const [brushSize, setBrushSize] = useState(20);
@@ -66,7 +65,7 @@ const ObjectEraser = () => {
     };
 
     const handleProcess = async () => {
-        if (!image || !apiKey) return;
+        if (!image) return;
 
         setLoading(true);
         setResult(null);
@@ -87,14 +86,16 @@ const ObjectEraser = () => {
             const formData = new FormData();
             formData.append('file', image);
             formData.append('mask_file', maskBlob, 'mask.png');
-            formData.append('api_key', apiKey);
 
             const response = await fetch('/api/edit/erase', {
                 method: 'POST',
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Failed to process');
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                throw new Error(errData.detail || 'Failed to process');
+            }
             const data = await response.json();
 
             let url = null;
