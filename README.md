@@ -1,78 +1,97 @@
 # 🎨 Visionary
 
-A powerful Streamlit app for advanced image generation and manipulation using Bria AI.
+A powerful full-stack AI Design Studio for advanced image generation and manipulation using Bria AI. Built with **React** (Frontend) and **FastAPI** (Backend).
 
 ## 🌟 Features
 
-- 🖼️ **Text-to-Image Generation**: Create stunning HD visuals from text prompts with various artistic styles (Realistic, Cartoon, Oil Painting, etc.) and aspect ratios.
-- 🛍️ **Product Photography Studio**:
+- 🖼️ **Text-to-Image Generation**: Create stunning HD visuals from text prompts with intelligent prompt enhancement, various artistic styles, and dynamic aspect ratios.
+- 🛍️ **Product Studio**:
   - **Create Packshot**: Professional manufacturing shots with custom background colors and automatic background removal.
-  - **Add Shadow**: Advanced shadow control with presets (Soft Drop, Hard Cast, Floating) and parametric adjustments (intensity, blur, direction).
-  - **Lifestyle Shot**: Place products in any scene using text generation or reference images with smart placement.
-- 🖌️ **Generative Fill**: Modify specific areas of an image by painting a mask and describing changes (inpainting).
-- 🧼 **Erase Elements**: Clean up images by removing unwanted objects (magic eraser).
-- ✨ **AI Prompt Enhancement**: Automatically refine your prompts for better generation results.
-- � **Advanced Controls**: Fine-tune everything from shadow blur to generation seeds.
+  - **Add Shadow**: Advanced shadow control with presets (Regular, Floating) and parametric adjustments.
+  - **Lifestyle Shot**: Place products in any scene using smart text descriptions.
+- 🖌️ **Generative Fill**: seamless inpainting to modify specific areas of an image with AI-generated content.
+- 🧼 **Object Eraser**: Cleanly remove unwanted objects from images using a magic eraser tool.
+- 🔒 **Secure Architecture**: API keys are safely managed in the backend, never exposed to the client.
+
+## 🛠️ Tech Stack
+
+- **Frontend**: React, Vite, CSS Modules (Built with AI assistance)
+- **Backend**: FastAPI, Uvicorn, Python
+- **AI Engine**: Bria AI API
 
 ## 🚀 Quick Start
 
-1. Clone the repository:
-```bash
-git clone https://github.com/Sameer-0904/adsnap-studio.git
-cd adsnap-studio
-```
+### Prerequisites
 
-2. Install dependencies:
+- Node.js & npm
+- Python 3.8+
+
+### 1. Backend Setup
+
+Navigate to the backend directory and install dependencies:
+
 ```bash
+cd backend
 pip install -r requirements.txt
 ```
 
-3. Create a `.env` file in the root directory:
-```bash
-BRIA_API_KEY=your_api_key_here
+Create a `.env` file in the `backend` directory and add your Bria API Key:
+
+```env
+BRIA_API_KEY=your_actual_api_key_here
 ```
 
-4. Run the app:
+Start the backend server:
+
 ```bash
-streamlit run app.py
+uvicorn api:app --reload --port 8000
 ```
+
+The API will be available at `http://localhost:8000`.
+
+### 2. Frontend Setup
+
+Navigate to the frontend directory and install dependencies:
+
+```bash
+cd visionary-frontend
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Open your browser at `http://localhost:5173` (or the port shown in terminal).
 
 ## 💡 Usage
 
-The app is organized into four main studios:
+The app is organized into dedicated studios in the sidebar:
 
 ### 1. 🎨 Generate Image
-- Enter a text prompt describing the image you want.
-- Use **"✨ Enhance Prompt"** to let AI improve your description.
-- Select a style (e.g., Realistic, Cyberpunk) and aspect ratio.
-- Click **"Generate Images"**.
-
-### 2. 🛍️ Product Photography
-- **Upload** your product image.
-- Choose a mode:
-    - **Create Packshot**: Clean up the background and set a new color.
-    - **Add Shadow**: Apply realistic shadows (Drop, Cast, Floating).
-    - **Lifestyle Shot**: Place your product in a new scene using a text description or a reference image.
-
-### 3. 🎨 Generative Fill
-- **Upload** an image.
-- **Draw** a mask over the area you want to change.
-- **Type** a prompt describing what should fill that area.
+- Enter a text prompt.
+- Click **"Enhance Prompt"** to refine it automatically.
+- Choose a style (e.g., Cartoon, Realistic) and Aspect Ratio.
 - Click **"Generate"**.
 
-### 4. 🧼 Erase Elements
+### 2. 🛍️ Product Studio
+- **Upload** your product image.
+- Choose a workflow: **Packshot**, **Add Shadow**, or **Lifestyle Shot**.
+- Configure parameters (Background color, Shadow type, Scene description).
+- Click **"Process Image"**.
+
+### 3. 🖌️ Generative Fill
 - **Upload** an image.
-- **Brush** over the object you want to remove.
-- Click **"Erase Selected Area"**.
+- **Draw** a mask over the area to fill.
+- **Describe** what should fill the area.
+- Click **"Generate Fill"**.
 
-## 🔧 Configuration
-
-**Visionary** offers granular control:
-
-- **Styles**: Choose from diverse art styles for generation.
-- **Shadows**: Customize shadow angle, blur, and opacity.
-- **Placement**: Manually or automatically positioning products in lifestyle shots.
-- **Content Moderation**: Toggle safety filters for strict or relaxed generation.
+### 4. 🧼 Object Eraser
+- **Upload** an image.
+- **Draw** a mask over the object to remove.
+- Click **"Erase Object"**.
 
 ## 🤝 Contributing
 
@@ -84,18 +103,14 @@ The app is organized into four main studios:
 
 ## 📝 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the MIT License.
 
 ## 🙏 Acknowledgments
 
-- [Bria AI](https://bria.ai) for their powerful image generation APIs
-- [Streamlit](https://streamlit.io) for the amazing web framework 
+- [Bria AI](https://bria.ai) for the powerful generative AI models.
 
 ## 📞 Contact
 
-Developed by **Sameer Prajapati** 
+Developed by **Sameer Prajapati**
 
 Email: sameerprajapati0904@gmail.com
-
-
-**Note:** **This app is not working properly on phone right now, I will fix it later.**
