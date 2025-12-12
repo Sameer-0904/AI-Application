@@ -20,8 +20,4 @@ services:
     staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
-        fromService:
-          type: web
-          name: visionary-backend
-          property: url
-          relativeUrlPath: "/"
+        value: https://visionary-backend-v0oc.onrender.com
