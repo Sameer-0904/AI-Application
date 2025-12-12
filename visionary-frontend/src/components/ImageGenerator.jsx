@@ -18,22 +18,33 @@ const ImageGenerator = () => {
         if (!prompt) return;
         setEnhancing(true);
         try {
+            const url = getApiUrl('/enhance-prompt');
+            console.log('🔍 Enhance Prompt URL:', url);
+            
             const formData = new FormData();
             formData.append('prompt', prompt);
 
-            const response = await fetch(getApiUrl('/enhance-prompt'), {
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData
             });
 
-            if (!response.ok) throw new Error('Failed to enhance prompt');
+            console.log('✅ Enhance Response Status:', response.status);
+            
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                throw new Error(errData.detail || `HTTP ${response.status}`);
+            }
+            
             const data = await response.json();
+            console.log('✅ Enhance Data:', data);
+            
             if (data.enhanced_prompt) {
                 setPrompt(data.enhanced_prompt);
             }
         } catch (err) {
-            console.error(err);
-            // Optional: setError(err.message);
+            console.error('❌ Enhance Error:', err);
+            alert('Enhancement failed: ' + err.message);
         } finally {
             setEnhancing(false);
         }
@@ -46,23 +57,29 @@ const ImageGenerator = () => {
         setError('');
 
         try {
+            const url = getApiUrl('/generate-image');
+            console.log('🖼️ Generate Image URL:', url);
+            
             const formData = new FormData();
             formData.append('prompt', prompt);
             formData.append('num_results', numImages);
             formData.append('aspect_ratio', aspectRatio);
             formData.append('style', style);
 
-            const response = await fetch(getApiUrl('/generate-image'), {
+            const response = await fetch(url, {
                 method: 'POST',
                 body: formData,
             });
 
+            console.log('✅ Generate Response Status:', response.status);
+            
             if (!response.ok) {
-                const errData = await response.json();
-                throw new Error(errData.detail || 'Generation failed');
+                const errData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+                throw new Error(errData.detail || `HTTP ${response.status}`);
             }
 
             const data = await response.json();
+            console.log('✅ Generate Data:', data);
 
             // Normalize response
             let urls = [];
@@ -77,6 +94,7 @@ const ImageGenerator = () => {
 
             setResult(urls);
         } catch (err) {
+            console.error('❌ Generate Error:', err);
             setError(err.message);
         } finally {
             setLoading(false);
