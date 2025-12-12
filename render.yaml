@@ -3,6 +3,7 @@ services:
   - type: web
     name: visionary-backend
     env: python
+    plan: free
     buildCommand: pip install -r requirements.txt
     startCommand: cd backend && uvicorn api:app --host 0.0.0.0 --port $PORT
     envVars:
@@ -13,6 +14,7 @@ services:
   - type: web
     name: visionary-frontend
     env: static
+    plan: free
     rootDir: visionary-frontend
     buildCommand: npm install && npm run build
     staticPublishPath: visionary-frontend/dist
