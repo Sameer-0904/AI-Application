@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload, FiDownload, FiRefreshCw } from 'react-icons/fi';
+import { getApiUrl } from '../config';
 
 const GenerativeFill = () => {
     const [image, setImage] = useState(null);
@@ -90,7 +91,7 @@ const GenerativeFill = () => {
             formData.append('mask_file', maskBlob, 'mask.png');
             formData.append('prompt', prompt);
 
-            const response = await fetch('/api/edit/generative-fill', {
+            const response = await fetch(getApiUrl('/edit/generative-fill'), {
                 method: 'POST',
                 body: formData
             });

@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { FiUpload, FiDownload, FiRefreshCw } from 'react-icons/fi';
+import { getApiUrl } from '../config';
 
 const ObjectEraser = () => {
     const [image, setImage] = useState(null);
@@ -87,7 +88,7 @@ const ObjectEraser = () => {
             formData.append('file', image);
             formData.append('mask_file', maskBlob, 'mask.png');
 
-            const response = await fetch('/api/edit/erase', {
+            const response = await fetch(getApiUrl('/edit/erase'), {
                 method: 'POST',
                 body: formData
             });

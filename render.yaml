@@ -1,0 +1,26 @@
+services:
+  # Python Backend
+  - type: web
+    name: visionary-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: cd backend && uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: BRIA_API_KEY
+        sync: false # User must provide this in dashboard
+
+  # React Frontend
+  - type: static
+    name: visionary-frontend
+    env: static
+    rootDir: visionary-frontend
+    buildCommand: npm install && npm run build
+    publishDir: dist
+    envVars:
+      - key: VITE_BRIA_API_KEY
+        sync: false
+      - key: VITE_API_URL
+        fromService:
+          type: web
+          name: visionary-backend
+          property: url

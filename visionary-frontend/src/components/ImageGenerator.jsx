@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FiDownload, FiMaximize2, FiCpu } from 'react-icons/fi';
+import { getApiUrl } from '../config';
 
 const ImageGenerator = () => {
     const [prompt, setPrompt] = useState('');
@@ -20,7 +21,7 @@ const ImageGenerator = () => {
             const formData = new FormData();
             formData.append('prompt', prompt);
 
-            const response = await fetch('/api/enhance-prompt', {
+            const response = await fetch(getApiUrl('/enhance-prompt'), {
                 method: 'POST',
                 body: formData
             });
@@ -51,7 +52,7 @@ const ImageGenerator = () => {
             formData.append('aspect_ratio', aspectRatio);
             formData.append('style', style);
 
-            const response = await fetch('/api/generate-image', {
+            const response = await fetch(getApiUrl('/generate-image'), {
                 method: 'POST',
                 body: formData,
             });

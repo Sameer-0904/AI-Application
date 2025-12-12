@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { FiUpload, FiBox, FiLayers, FiCamera, FiDownload } from 'react-icons/fi';
+import { getApiUrl } from '../config';
 
 const ProductStudio = () => {
     const [image, setImage] = useState(null);
@@ -38,15 +39,15 @@ const ProductStudio = () => {
             let endpoint = '';
 
             if (mode === 'packshot') {
-                endpoint = '/api/product/packshot';
+                endpoint = getApiUrl('/product/packshot');
                 formData.append('background_color', bgColor);
                 formData.append('force_rmbg', 'true'); // Default to true for convenience
             } else if (mode === 'shadow') {
-                endpoint = '/api/product/shadow';
+                endpoint = getApiUrl('/product/shadow');
                 formData.append('shadow_type', shadowType);
                 formData.append('force_rmbg', 'true');
             } else if (mode === 'lifestyle') {
-                endpoint = '/api/product/lifestyle-text';
+                endpoint = getApiUrl('/product/lifestyle-text');
                 formData.append('scene_description', sceneDescription);
                 formData.append('force_rmbg', 'true');
             }
