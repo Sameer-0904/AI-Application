@@ -10,7 +10,7 @@ services:
         sync: false # User must provide this in dashboard
 
   # React Frontend
-  - type: static
+  - type: web
     name: visionary-frontend
     env: static
     rootDir: visionary-frontend
