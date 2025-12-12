@@ -17,11 +17,11 @@ services:
     plan: free
     rootDir: visionary-frontend
     buildCommand: npm install && npm run build
-    staticPublishPath: visionary-frontend/dist
+    staticPublishPath: dist
     envVars:
       - key: VITE_API_URL
         fromService:
           type: web
           name: visionary-backend
-          property: host
+          property: url
           relativeUrlPath: "/"
