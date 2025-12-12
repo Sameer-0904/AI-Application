@@ -15,7 +15,7 @@ services:
     env: static
     rootDir: visionary-frontend
     buildCommand: npm install && npm run build
-    publishDir: dist
+    staticPublishPath: visionary-frontend/dist
     envVars:
       - key: VITE_BRIA_API_KEY
         sync: false
