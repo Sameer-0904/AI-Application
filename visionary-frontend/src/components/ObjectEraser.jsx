@@ -162,8 +162,7 @@ const ObjectEraser = () => {
                     maskCanvas.height = height;
                 }
             }
-            const canvas = canvasRef.current;
-            const maskCanvas = maskCanvasRef.current;
+            // reuse canvas, maskCanvas, and img declared above
             // If mask canvas backing store isn't ready, ask user to wait and avoid drawImage errors
             if (!maskCanvas || !maskCanvas.width || !maskCanvas.height) {
                 alert('Please wait until the image finishes loading and draw a mask before proceeding.');
@@ -171,12 +170,11 @@ const ObjectEraser = () => {
                 return;
             }
             const tempCanvas = document.createElement('canvas');
-            const img = imageRef.current;
             const width = (canvas && canvas.width) || (img && (img.naturalWidth || img.width)) || 1024;
             const height = (canvas && canvas.height) || (img && (img.naturalHeight || img.height)) || 1024;
             tempCanvas.width = width;
             tempCanvas.height = height;
-            const maskCanvas = maskCanvasRef.current;
+            // maskCanvas already declared earlier via maskCanvasRef
             const tempCtx = tempCanvas.getContext('2d');
 
             // create a black background + draw the mask (white strokes) on top
