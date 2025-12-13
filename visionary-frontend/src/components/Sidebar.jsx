@@ -66,7 +66,7 @@ const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
                     Settings
                 </button>
             </div>
-        </div>
+        </aside>
     );
 };
 
