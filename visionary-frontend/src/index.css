@@ -95,11 +95,11 @@ button {
   .floating-actions {
     display: flex;
     position: fixed;
-    bottom: 20px;
+    bottom: max(20px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
     z-index: 70;
-    gap: 8px;
+    gap: 12px;
     padding: 8px;
     background: rgba(15, 17, 26, 0.35);
     border-radius: 999px;
@@ -185,15 +185,26 @@ button {
 .mode-toggle { display: flex; gap: 0.5rem; }
 @media (max-width: 768px) {
   .mode-toggle { flex-direction: column; }
+}
 
-  /* Section helpers for stacked layout */
-  .section-main { width: 100%; margin-bottom: 0.75rem; }
-  .section-controls { width: 100%; margin-bottom: 0.75rem; }
-  .section-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem; }
-  @media (max-width: 768px) {
-    .section-actions { justify-content: center; padding: 0 1rem; }
-    .section-actions .btn-primary { width: 60%; }
-    .section-actions .btn-secondary { width: 30%; }
+/* Section helpers for stacked layout */
+.section-main { width: 100%; margin-bottom: 0.75rem; }
+.section-controls { width: 100%; margin-bottom: 0.75rem; }
+.section-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem; }
+
+/* Mobile rules: hide desktop action bar and ensure the floating actions are visible */
+@media (max-width: 768px) {
+  .section-actions { display: none !important; justify-content: center; padding: 0 1rem; }
+  .section-actions .btn-primary { width: 60%; }
+  .section-actions .btn-secondary { width: 30%; }
+  .main { padding-bottom: calc(110px + env(safe-area-inset-bottom)); }
+  .floating-actions { max-width: 92%; }
+  .floating-actions .btn-primary { flex: 2; }
+  .floating-actions .btn-secondary { flex: 1; }
+  @media (max-width: 480px) {
+    .floating-actions { gap: 8px; }
+    .floating-actions .btn-primary { padding: 0.65rem 1rem; font-size: 0.95rem; }
+    .floating-actions .btn-secondary { padding: 0.65rem 0.9rem; font-size: 0.95rem; }
   }
 }
 

@@ -197,16 +197,16 @@ const ProductStudio = () => {
                             </div>
                         )}
 
-                        <div className="section-actions">
-                            <button
-                                className="btn-primary"
-                                style={{ width: '100%', marginTop: '2rem' }}
-                                onClick={handleProcess}
-                                disabled={loading || !image}
-                            >
-                                {loading ? 'Processing...' : 'Apply Magic ✨'}
-                            </button>
-                        </div>
+                    </div>
+                    <div className="section-actions">
+                        <button
+                            className="btn-primary"
+                            style={{ width: '100%', marginTop: '2rem' }}
+                            onClick={handleProcess}
+                            disabled={loading || !image}
+                        >
+                            {loading ? 'Processing...' : 'Apply Magic ✨'}
+                        </button>
                     </div>
                 </div>
             </div>
