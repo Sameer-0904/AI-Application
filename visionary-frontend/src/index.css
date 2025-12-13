@@ -201,13 +201,14 @@ button {
   .floating-actions { max-width: 92%; }
   .floating-actions .btn-primary { flex: 2; }
   .floating-actions .btn-secondary { flex: 1; }
-  @media (max-width: 480px) {
-    .floating-actions { gap: 8px; }
-    .floating-actions .btn-primary { padding: 0.65rem 1rem; font-size: 0.95rem; }
-    .floating-actions .btn-secondary { padding: 0.65rem 0.9rem; font-size: 0.95rem; }
-  }
 }
 
+@media (max-width: 480px) {
+  .floating-actions { gap: 8px; }
+  .floating-actions .btn-primary { padding: 0.65rem 1rem; font-size: 0.95rem; }
+  .floating-actions .btn-secondary { padding: 0.65rem 0.9rem; font-size: 0.95rem; }
+}
+/* Reduced gutters for small screens */
 /* Reduced gutters for small screens */
 @media (max-width: 480px) {
   .btn-primary { width: 100%; }

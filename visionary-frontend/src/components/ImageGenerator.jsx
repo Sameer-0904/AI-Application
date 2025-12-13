@@ -101,6 +101,23 @@ const ImageGenerator = () => {
         }
     };
 
+    const handleDownload = async (url, filename = 'visionary-result.png') => {
+        try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = blobUrl;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            URL.revokeObjectURL(blobUrl);
+        } catch (err) {
+            console.error('Download failed', err);
+        }
+    };
+
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
             <header style={{ marginBottom: '2rem' }}>
@@ -135,19 +152,17 @@ const ImageGenerator = () => {
                             {result.map((url, idx) => (
                                 <div key={idx} className="glass-panel" style={{ overflow: 'hidden', position: 'relative' }}>
                                     <img src={url} alt={`Result ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    <a
-                                        href={url}
-                                        download
-                                        target="_blank"
+                                    <button
+                                        onClick={() => handleDownload(url)}
                                         style={{
                                             position: 'absolute', bottom: '10px', right: '10px',
                                             background: 'white', color: 'black',
                                             width: '32px', height: '32px', borderRadius: '50%',
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', border: 0
                                         }}
                                     >
                                         <FiDownload />
-                                    </a>
+                                    </button>
                                 </div>
                             ))}
                         </div>

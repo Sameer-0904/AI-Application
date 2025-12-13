@@ -108,9 +108,22 @@ const ProductStudio = () => {
                             <div style={{ width: '100%', position: 'relative' }}>
                                 <img className="preview-img" src={result || preview} alt="Preview" />
                                 {result && (
-                                    <a href={result} download className="btn-primary" style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
+                                    <button onClick={async () => {
+                                        try {
+                                            const r = await fetch(result);
+                                            const blob = await r.blob();
+                                            const url = URL.createObjectURL(blob);
+                                            const a = document.createElement('a');
+                                            a.href = url;
+                                            a.download = 'visionary-result.png';
+                                            document.body.appendChild(a);
+                                            a.click();
+                                            a.remove();
+                                            URL.revokeObjectURL(url);
+                                        } catch (err) { console.error('Download failed', err); }
+                                    }} className="btn-primary" style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
                                         <FiDownload /> Download
-                                    </a>
+                                    </button>
                                 )}
                                 {!loading && (
                                     <button onClick={() => { setPreview(null); setImage(null); setResult(null); }} style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(0,0,0,0.5)', color: 'white', padding: '0.5rem', borderRadius: '50%' }}>✕</button>
@@ -209,6 +222,12 @@ const ProductStudio = () => {
                         </button>
                     </div>
                 </div>
+            </div>
+            {/* Floating actions for mobile: Apply Magic */}
+            <div className="floating-actions" role="toolbar">
+                <button className="btn-primary" onClick={handleProcess} disabled={loading}>
+                    {loading ? 'Processing...' : 'Apply Magic ✨'}
+                </button>
             </div>
         </div>
     );
