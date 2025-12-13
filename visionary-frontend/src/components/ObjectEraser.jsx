@@ -146,9 +146,12 @@ const ObjectEraser = () => {
             <div className="layout-grid">
                 <div className="glass-panel preview-panel" style={{ padding: '2rem', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {!imageSrc ? (
-                        <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                            <FiUpload size={48} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
-                            <p style={{ fontSize: '1.2rem', fontWeight: '500' }}>Upload Image</p>
+                        <label style={{ cursor: 'pointer', textAlign: 'center' }} className="upload-placeholder">
+                            <FiUpload size={56} style={{ color: 'var(--color-text-muted)' }} />
+                            <div>
+                                <p style={{ fontSize: '1rem', fontWeight: '600' }}>Upload Image</p>
+                                <p style={{ color: 'var(--color-text-muted)' }}>JPG or PNG</p>
+                            </div>
                             <input type="file" onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
                         </label>
                     ) : (
@@ -223,6 +226,18 @@ const ObjectEraser = () => {
                     )}
                     {!imageSrc && <p style={{ color: 'var(--color-text-muted)', textAlign: 'center' }}>Upload an image to start.</p>}
                 </div>
+            </div>
+
+            {/* Floating actions for mobile: Clear + Erase */}
+            <div className="floating-actions" role="toolbar">
+                <button className="btn-secondary" onClick={() => {
+                    const canvas = canvasRef.current;
+                    const ctx = canvas.getContext('2d');
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                }}>
+                    Clear
+                </button>
+                <button className="btn-primary" onClick={handleProcess} disabled={loading}>{loading ? 'Processing...' : 'Erase'}</button>
             </div>
         </div>
     );

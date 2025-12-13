@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/Sidebar';
+import { FiMenu } from 'react-icons/fi';
 import ImageGenerator from './components/ImageGenerator';
 import ProductStudio from './components/ProductStudio';
 import GenerativeFill from './components/GenerativeFill';
@@ -36,8 +37,8 @@ function App() {
       <div style={{ flex: 1 }}>
         <header className="mobile-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-            <button className="btn-primary" onClick={() => setMobileOpen(true)} style={{ padding: '0.5rem' }}>Menu</button>
-            <h1 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Visionary</h1>
+            <button className="menu-btn btn-primary" onClick={() => setMobileOpen(true)} aria-label="Open menu"><FiMenu /></button>
+            <h1 className="title">Visionary</h1>
           </div>
         </header>
         <div className={`backdrop ${mobileOpen ? 'visible' : ''}`} onClick={() => setMobileOpen(false)} />

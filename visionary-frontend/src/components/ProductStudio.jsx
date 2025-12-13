@@ -96,10 +96,12 @@ const ProductStudio = () => {
                 <div>
                     <div className="glass-panel preview-container preview-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--color-border)' }}>
                         {!preview ? (
-                            <label style={{ cursor: 'pointer', textAlign: 'center' }}>
-                                <FiUpload size={48} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
-                                <p style={{ fontSize: '1.2rem', fontWeight: '500' }}>Upload Product Image</p>
-                                <p style={{ color: 'var(--color-text-muted)' }}>JPG or PNG</p>
+                            <label style={{ cursor: 'pointer', textAlign: 'center' }} className="upload-placeholder">
+                                <FiUpload size={56} style={{ color: 'var(--color-text-muted)' }} />
+                                <div>
+                                    <p style={{ fontSize: '1rem', fontWeight: '600' }}>Upload Product Image</p>
+                                    <p style={{ color: 'var(--color-text-muted)' }}>JPG or PNG</p>
+                                </div>
                                 <input type="file" onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
                             </label>
                         ) : (

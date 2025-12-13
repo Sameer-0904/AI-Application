@@ -238,6 +238,17 @@ const ImageGenerator = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Floating mobile actions */}
+            <div className="floating-actions" role="toolbar" aria-hidden={false}>
+                <button className="btn-secondary" onClick={handleEnhancePrompt} disabled={enhancing || !prompt} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ transform: 'rotate(45deg)', display: 'inline-block' }}><FiMaximize2 /></span>
+                    Enhance
+                </button>
+                <button className="btn-primary" onClick={handleGenerate} disabled={loading}>
+                    {loading ? 'Generating' : 'Generate'}
+                </button>
+            </div>
         </div>
     );
 };

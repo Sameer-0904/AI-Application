@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Visionary site favicon: stylized 'V' inside an eye with gradient -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g1" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#5ee7df"/>
+      <stop offset="60%" stop-color="#b49cff"/>
+      <stop offset="100%" stop-color="#7b61ff"/>
+    </linearGradient>
+    <linearGradient id="g2" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.6"/>
+    </linearGradient>
+    <filter id="shadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feOffset result="offOut" in="SourceAlpha" dx="0" dy="6"/>
+      <feGaussianBlur result="blurOut" in="offOut" stdDeviation="8"/>
+      <feColorMatrix result="matrixOut" in="blurOut" type="matrix"
+        values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.2 0"/>
+      <feBlend in="SourceGraphic" in2="matrixOut" mode="normal"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle with glossy gradient -->
+  <rect width="512" height="512" rx="64" ry="64" fill="url(#g1)"/>
+  <g filter="url(#shadow)">
+    <ellipse cx="256" cy="256" rx="200" ry="124" fill="rgba(0,0,0,0.08)" transform="translate(0,10)"/>
+  </g>
+
+  <!-- Outer eye shape -->
+  <path d="M 80 256 C 120 160 392 160 432 256 C 392 352 120 352 80 256 Z"
+    fill="none" stroke="#ffffff" stroke-opacity="0.18" stroke-width="10"/>
+  <path d="M 88 256 C 128 176 384 176 424 256 C 384 336 128 336 88 256 Z"
+    fill="#ffffff" fill-opacity="0.06"/>
+
+  <!-- Iris circle -->
+  <circle cx="256" cy="256" r="64" fill="#0f172a" />
+  <circle cx="256" cy="256" r="46" fill="url(#g2)"/>
+
+  <!-- Stylized 'V' inside the iris (represents Visionary) -->
+  <path d="M 226 208 L 256 280 L 286 208 L 256 220 Z" fill="#7b61ff" transform="translate(-0,10)"/>
+  <path d="M 236 228 L 256 260 L 276 228 L 256 240 Z" fill="#ffffff" fill-opacity="0.2"/>
+
+  <!-- highlight on iris -->
+  <ellipse cx="280" cy="238" rx="12" ry="18" fill="#ffffff" fill-opacity="0.18"/>
+</svg>
