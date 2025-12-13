@@ -12,11 +12,7 @@ const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
     return (
         <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
             <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
-                <div style={{
-                    width: '32px', height: '32px',
-                    background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
-                    borderRadius: '8px'
-                }}></div>
+                <img src="/favicon.svg" alt="Visionary logo" className="brand-icon" />
                 <h1 style={{ fontSize: '1.25rem', fontWeight: '700', letterSpacing: '-0.025em' }}>Visionary</h1>
                 <button className="btn-primary mobile-close" onClick={() => setMobileOpen(false)} style={{ padding: '0.25rem 0.5rem' }}>Close</button>
             </div>

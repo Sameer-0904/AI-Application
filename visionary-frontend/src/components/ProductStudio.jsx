@@ -92,8 +92,8 @@ const ProductStudio = () => {
             </header>
 
             <div className="layout-grid">
-                {/* Left: Image Display */}
-                <div>
+                {/* Main: Image Display */}
+                <div className="section-main">
                     <div className="glass-panel preview-container preview-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--color-border)' }}>
                         {!preview ? (
                             <label style={{ cursor: 'pointer', textAlign: 'center' }} className="upload-placeholder">
@@ -121,8 +121,8 @@ const ProductStudio = () => {
                     </div>
                 </div>
 
-                {/* Right: Controls */}
-                <div>
+                {/* Controls */}
+                <div className="section-controls">
                     <div className="glass-panel mode-toggle" style={{ padding: '0.5rem', gap: '0.5rem', marginBottom: '1.5rem' }}>
                         {[
                             { id: 'packshot', label: 'Packshot', icon: <FiBox /> },
@@ -150,7 +150,7 @@ const ProductStudio = () => {
                         ))}
                     </div>
 
-                    <div className="glass-panel tools-panel" style={{ padding: '1.5rem' }}>
+                    <div className="section-controls glass-panel tools-panel" style={{ padding: '1.5rem' }}>
                         {mode === 'packshot' && (
                             <div>
                                 <h3 style={{ marginBottom: '1rem' }}>Packshot Settings</h3>
@@ -197,14 +197,16 @@ const ProductStudio = () => {
                             </div>
                         )}
 
-                        <button
-                            className="btn-primary"
-                            style={{ width: '100%', marginTop: '2rem' }}
-                            onClick={handleProcess}
-                            disabled={loading || !image}
-                        >
-                            {loading ? 'Processing...' : 'Apply Magic ✨'}
-                        </button>
+                        <div className="section-actions">
+                            <button
+                                className="btn-primary"
+                                style={{ width: '100%', marginTop: '2rem' }}
+                                onClick={handleProcess}
+                                disabled={loading || !image}
+                            >
+                                {loading ? 'Processing...' : 'Apply Magic ✨'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>

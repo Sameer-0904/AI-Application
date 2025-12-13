@@ -144,7 +144,7 @@ const GenerativeFill = () => {
             </header>
 
             <div className="layout-grid">
-                <div className="glass-panel preview-panel" style={{ padding: '2rem', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div className="section-main glass-panel preview-panel" style={{ padding: '2rem', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {!imageSrc ? (
                         <label style={{ cursor: 'pointer', textAlign: 'center' }} className="upload-placeholder">
                             <FiUpload size={56} style={{ color: 'var(--color-text-muted)' }} />
@@ -197,7 +197,7 @@ const GenerativeFill = () => {
                     )}
                 </div>
 
-                <div className="glass-panel tools-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
+                <div className="section-controls glass-panel tools-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>Tools</h3>
                     {imageSrc && !result && (
                         <>
@@ -220,9 +220,6 @@ const GenerativeFill = () => {
                                     placeholder="What should fill the masked area?"
                                     style={{ width: '100%', height: '80px', padding: '0.5rem', borderRadius: '0.5rem', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--color-border)', color: 'white', marginBottom: '0.5rem' }}
                                 />
-                                    <button className="btn-primary" style={{ width: '100%' }} onClick={handleProcess} disabled={loading}>
-                                        {loading ? 'Processing...' : 'Generate Fill'}
-                                </button>
                             </div>
                         </>
                     )}
@@ -231,6 +228,15 @@ const GenerativeFill = () => {
                             <FiRefreshCw /> Edit Again
                         </button>
                     )}
+                </div>
+
+                <div className="section-actions">
+                    <button className="btn-secondary" style={{ width: '30%' }} onClick={() => {
+                        const canvas = canvasRef.current;
+                        const ctx = canvas.getContext('2d');
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    }}>Clear</button>
+                    <button className="btn-primary" style={{ width: '70%' }} onClick={handleProcess} disabled={loading}>{loading ? 'Processing...' : 'Generate Fill'}</button>
                 </div>
             </div>
 

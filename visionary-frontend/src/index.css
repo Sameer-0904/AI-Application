@@ -65,6 +65,9 @@ button {
 .upload-placeholder { border-radius: 0.75rem; background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01)); border: 1px dashed rgba(255,255,255,0.02); }
 .preview-img { box-shadow: 0 8px 30px rgba(0,0,0,0.45); }
 
+/* Brand icon inside the sidebar */
+.brand-icon { width: 36px; height: 36px; border-radius: 8px; object-fit: cover; box-shadow: 0 6px 18px rgba(0,0,0,0.3); }
+
 /* Layout classes */
 .app-container { display: flex; }
 .mobile-header { display: none; }
@@ -146,7 +149,7 @@ button {
 }
 
 /* Desktop grid layout for generator */
-.layout-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+.layout-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
 
 .action-row { display: flex; justify-content: space-between; gap: 0.5rem; }
 @media (max-width: 768px) {
@@ -161,6 +164,10 @@ button {
 /* Preview utilities */
 .preview-container { width: 100%; position: relative; }
 .preview-panel { min-height: 500px; }
+.section-main textarea, .section-main .upload-placeholder { min-height: 220px; }
+@media (min-width: 1200px) {
+  .section-main textarea { min-height: 40vh; }
+}
 .preview-img { width: 100%; height: auto; border-radius: 0.5rem; display: block; }
 .preview-actions { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; }
 
@@ -178,6 +185,16 @@ button {
 .mode-toggle { display: flex; gap: 0.5rem; }
 @media (max-width: 768px) {
   .mode-toggle { flex-direction: column; }
+
+  /* Section helpers for stacked layout */
+  .section-main { width: 100%; margin-bottom: 0.75rem; }
+  .section-controls { width: 100%; margin-bottom: 0.75rem; }
+  .section-actions { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 0.75rem; }
+  @media (max-width: 768px) {
+    .section-actions { justify-content: center; padding: 0 1rem; }
+    .section-actions .btn-primary { width: 60%; }
+    .section-actions .btn-secondary { width: 30%; }
+  }
 }
 
 /* Reduced gutters for small screens */

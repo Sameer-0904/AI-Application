@@ -37,6 +37,7 @@ function App() {
       <div style={{ flex: 1 }}>
         <header className="mobile-header">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <img src="/favicon.svg" alt="Visionary logo" className="brand-icon" />
             <button className="menu-btn btn-primary" onClick={() => setMobileOpen(true)} aria-label="Open menu"><FiMenu /></button>
             <h1 className="title">Visionary</h1>
           </div>

@@ -109,9 +109,9 @@ const ImageGenerator = () => {
             </header>
 
             <div className="layout-grid">
-                {/* Left Column: Input */}
-                <div>
-                    <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
+                {/* Main: Input & Results */}
+                <div className="section-main">
+                    <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '1rem' }}>
                         <textarea
                             value={prompt}
                             onChange={(e) => setPrompt(e.target.value)}
@@ -127,30 +127,7 @@ const ImageGenerator = () => {
                                 outline: 'none'
                             }}
                         />
-                        <div className="action-row" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
-                            <button
-                                onClick={handleEnhancePrompt}
-                                disabled={enhancing || !prompt}
-                                style={{ color: enhancing ? 'var(--color-primary)' : 'var(--color-text-muted)', display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'transparent', cursor: 'pointer', border: 'none' }}
-                            >
-                                <FiMaximize2 /> {enhancing ? 'Enhancing...' : 'Enhance Prompt'}
-                            </button>
-                            <button
-                                className="btn-primary"
-                                onClick={handleGenerate}
-                                disabled={loading}
-                                style={{ opacity: loading ? 0.7 : 1 }}
-                            >
-                                {loading ? 'Generating...' : 'Generate'}
-                            </button>
-                        </div>
                     </div>
-
-                    {error && (
-                        <div style={{ padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderRadius: '0.5rem', marginBottom: '1rem' }}>
-                            {error}
-                        </div>
-                    )}
 
                     {/* Results Grid */}
                     {result && (
@@ -177,8 +154,16 @@ const ImageGenerator = () => {
                     )}
                 </div>
 
-                {/* Right Column: Settings */}
-                <div className="glass-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
+                    {error && (
+                        <div style={{ padding: '1rem', backgroundColor: 'rgba(239, 68, 68, 0.2)', color: '#fca5a5', borderRadius: '0.5rem', marginBottom: '1rem' }}>
+                            {error}
+                        </div>
+                    )}
+
+                
+
+                {/* Controls */}
+                <div className="section-controls glass-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
                     <h3 style={{ fontSize: '1.1rem', marginBottom: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                         <FiCpu /> Settings
                     </h3>
@@ -236,6 +221,26 @@ const ImageGenerator = () => {
                             style={{ width: '100%', accentColor: 'var(--color-primary)' }}
                         />
                     </div>
+                </div>
+
+                {/* Actions */}
+                <div className="section-actions">
+                    <button
+                        onClick={handleEnhancePrompt}
+                        disabled={enhancing || !prompt}
+                        className="btn-secondary"
+                        style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    >
+                        <FiMaximize2 /> {enhancing ? 'Enhancing...' : 'Enhance Prompt'}
+                    </button>
+                    <button
+                        className="btn-primary"
+                        onClick={handleGenerate}
+                        disabled={loading}
+                        style={{ opacity: loading ? 0.7 : 1 }}
+                    >
+                        {loading ? 'Generating...' : 'Generate'}
+                    </button>
                 </div>
             </div>
 
