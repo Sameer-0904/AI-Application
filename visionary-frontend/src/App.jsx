@@ -17,6 +17,7 @@ const Placeholder = ({ title }) => (
 
 function App() {
   const [activeTab, setActiveTab] = useState('generate');
+  const [mobileOpen, setMobileOpen] = useState(false);
   const apiKey = import.meta.env.VITE_BRIA_API_KEY;
 
   const renderContent = () => {
@@ -30,17 +31,20 @@ function App() {
   };
 
   return (
-    <div style={{ display: 'flex' }}>
-      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} />
-      <main style={{
-        marginLeft: '280px',
-        flex: 1,
-        padding: '2rem',
-        minHeight: '100vh',
-        background: 'radial-gradient(circle at top right, #1e2130 0%, #0f111a 60%)'
-      }}>
-        {renderContent()}
-      </main>
+    <div className="app-container">
+      <Sidebar activeTab={activeTab} setActiveTab={setActiveTab} mobileOpen={mobileOpen} setMobileOpen={setMobileOpen} />
+      <div style={{ flex: 1 }}>
+        <header className="mobile-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            <button className="btn-primary" onClick={() => setMobileOpen(true)} style={{ padding: '0.5rem' }}>Menu</button>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: '700' }}>Visionary</h1>
+          </div>
+        </header>
+        <div className={`backdrop ${mobileOpen ? 'visible' : ''}`} onClick={() => setMobileOpen(false)} />
+        <main className="main">
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }

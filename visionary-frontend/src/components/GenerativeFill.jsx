@@ -50,6 +50,12 @@ const GenerativeFill = () => {
         setIsDrawing(true);
     };
 
+    const startTouch = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+    };
+
     const draw = (e) => {
         if (!isDrawing) return;
         const canvas = canvasRef.current;
@@ -62,8 +68,19 @@ const GenerativeFill = () => {
         ctx.stroke();
     };
 
+    const drawTouch = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        draw({ clientX: touch.clientX, clientY: touch.clientY });
+    };
+
     const endDrawing = () => {
         setIsDrawing(false);
+    };
+
+    const endTouch = (e) => {
+        e.preventDefault();
+        endDrawing();
     };
 
     const handleProcess = async () => {
@@ -126,8 +143,8 @@ const GenerativeFill = () => {
                 <p style={{ color: 'var(--color-text-muted)' }}>Fill masked areas with AI generated content.</p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '2rem' }}>
-                <div className="glass-panel" style={{ padding: '2rem', position: 'relative', minHeight: '500px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div className="layout-grid">
+                <div className="glass-panel preview-panel" style={{ padding: '2rem', position: 'relative', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     {!imageSrc ? (
                         <label style={{ cursor: 'pointer', textAlign: 'center' }}>
                             <FiUpload size={48} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
@@ -135,7 +152,7 @@ const GenerativeFill = () => {
                             <input type="file" onChange={handleFileChange} style={{ display: 'none' }} accept="image/*" />
                         </label>
                     ) : (
-                        <div style={{ position: 'relative', width: 'fit-content', border: '1px solid var(--color-border)' }}>
+                        <div className="preview-container" style={{ position: 'relative', maxWidth: '100%', border: '1px solid var(--color-border)' }}>
                             <img
                                 ref={imageRef}
                                 src={result || imageSrc}
@@ -155,6 +172,9 @@ const GenerativeFill = () => {
                                     onMouseMove={draw}
                                     onMouseUp={endDrawing}
                                     onMouseLeave={endDrawing}
+                                    onTouchStart={startTouch}
+                                    onTouchMove={drawTouch}
+                                    onTouchEnd={endTouch}
                                     style={{
                                         position: 'absolute',
                                         top: 0, left: 0,
@@ -174,7 +194,7 @@ const GenerativeFill = () => {
                     )}
                 </div>
 
-                <div className="glass-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
+                <div className="glass-panel tools-panel" style={{ padding: '1.5rem', height: 'fit-content' }}>
                     <h3 style={{ marginBottom: '1.5rem' }}>Tools</h3>
                     {imageSrc && !result && (
                         <>

@@ -108,7 +108,7 @@ const ImageGenerator = () => {
                 <p style={{ color: 'var(--color-text-muted)' }}>Turn your text descriptions into stunning visuals.</p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '2rem' }}>
+            <div className="layout-grid">
                 {/* Left Column: Input */}
                 <div>
                     <div className="glass-panel" style={{ padding: '1.5rem', marginBottom: '2rem' }}>
@@ -127,7 +127,7 @@ const ImageGenerator = () => {
                                 outline: 'none'
                             }}
                         />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
+                        <div className="action-row" style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--color-border)' }}>
                             <button
                                 onClick={handleEnhancePrompt}
                                 disabled={enhancing || !prompt}

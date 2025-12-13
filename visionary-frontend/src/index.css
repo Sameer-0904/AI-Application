@@ -23,6 +23,7 @@ body {
   font-family: var(--font-family);
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 button {
@@ -52,4 +53,63 @@ button {
 .btn-primary:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+/* Layout classes */
+.app-container { display: flex; }
+.mobile-header { display: none; }
+.sidebar { width: 280px; height: 100vh; background-color: var(--color-surface); border-right: 1px solid var(--color-border); padding: 1.5rem; display: flex; flex-direction: column; position: fixed; left: 0; top: 0; z-index: 50; }
+.main { margin-left: 280px; flex: 1; padding: 2rem; min-height: 100vh; background: radial-gradient(circle at top right, #1e2130 0%, #0f111a 60%); }
+
+/* Responsive: mobile < 768px */
+@media (max-width: 768px) {
+  .sidebar { position: fixed; top: 0; left: -100%; width: 80%; max-width: 320px; height: 100%; transition: left 0.25s ease; }
+  .sidebar.open { left: 0; }
+  .main { margin-left: 0; padding: 1rem; }
+  .mobile-header { display: flex; align-items: center; justify-content: space-between; padding: 1rem; background: transparent; border-bottom: 1px solid var(--color-border); z-index: 60; }
+  .layout-grid { display: block; }
+  .glass-panel { padding: 1rem; border-radius: 0.5rem; }
+}
+
+/* Backdrop for mobile sidebar */
+.backdrop { display: none; }
+@media (max-width: 768px) {
+  .backdrop.visible { display: block; position: fixed; inset: 0; background: rgba(0,0,0,0.45); z-index: 40; }
+  .mobile-close { display: inline-block; }
+}
+
+/* Desktop grid layout for generator */
+.layout-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 2rem; }
+
+.action-row { display: flex; justify-content: space-between; gap: 0.5rem; }
+@media (max-width: 768px) {
+  .action-row { flex-direction: column; align-items: stretch; }
+}
+
+/* Preview utilities */
+.preview-container { width: 100%; position: relative; }
+.preview-panel { min-height: 500px; }
+.preview-img { width: 100%; height: auto; border-radius: 0.5rem; display: block; }
+.preview-actions { position: absolute; right: 10px; top: 10px; display: flex; gap: 8px; }
+
+/* Tools panel adjustments */
+.tools-panel { padding: 1.5rem; }
+@media (max-width: 768px) {
+  .tools-panel { padding: 1rem; }
+  .preview-img { max-height: 50vh; }
+}
+
+@media (max-width: 480px) {
+  .preview-panel { min-height: 300px; }
+}
+
+.mode-toggle { display: flex; gap: 0.5rem; }
+@media (max-width: 480px) {
+  .mode-toggle { flex-direction: column; }
+}
+
+/* Reduced gutters for small screens */
+@media (max-width: 480px) {
+  .btn-primary { width: 100%; }
+  textarea { height: 120px; }
 }

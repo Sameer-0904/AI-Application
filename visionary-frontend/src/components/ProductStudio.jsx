@@ -91,10 +91,10 @@ const ProductStudio = () => {
                 <p style={{ color: 'var(--color-text-muted)' }}>Professional tools for e-commerce photography.</p>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+            <div className="layout-grid">
                 {/* Left: Image Display */}
                 <div>
-                    <div className="glass-panel" style={{ padding: '2rem', minHeight: '400px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--color-border)' }}>
+                    <div className="glass-panel preview-container preview-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', border: '2px dashed var(--color-border)' }}>
                         {!preview ? (
                             <label style={{ cursor: 'pointer', textAlign: 'center' }}>
                                 <FiUpload size={48} style={{ color: 'var(--color-text-muted)', marginBottom: '1rem' }} />
@@ -104,7 +104,7 @@ const ProductStudio = () => {
                             </label>
                         ) : (
                             <div style={{ width: '100%', position: 'relative' }}>
-                                <img src={result || preview} alt="Preview" style={{ width: '100%', borderRadius: '0.5rem' }} />
+                                <img className="preview-img" src={result || preview} alt="Preview" />
                                 {result && (
                                     <a href={result} download className="btn-primary" style={{ position: 'absolute', bottom: '20px', right: '20px', display: 'flex', alignItems: 'center', gap: '0.5rem', textDecoration: 'none' }}>
                                         <FiDownload /> Download
@@ -121,7 +121,7 @@ const ProductStudio = () => {
 
                 {/* Right: Controls */}
                 <div>
-                    <div className="glass-panel" style={{ padding: '0.5rem', display: 'flex', gap: '0.5rem', marginBottom: '1.5rem' }}>
+                    <div className="glass-panel mode-toggle" style={{ padding: '0.5rem', gap: '0.5rem', marginBottom: '1.5rem' }}>
                         {[
                             { id: 'packshot', label: 'Packshot', icon: <FiBox /> },
                             { id: 'shadow', label: 'Shadows', icon: <FiLayers /> },
@@ -148,7 +148,7 @@ const ProductStudio = () => {
                         ))}
                     </div>
 
-                    <div className="glass-panel" style={{ padding: '1.5rem' }}>
+                    <div className="glass-panel tools-panel" style={{ padding: '1.5rem' }}>
                         {mode === 'packshot' && (
                             <div>
                                 <h3 style={{ marginBottom: '1rem' }}>Packshot Settings</h3>

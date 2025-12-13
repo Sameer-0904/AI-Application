@@ -1,7 +1,7 @@
 import React from 'react';
 import { FiImage, FiShoppingBag, FiEdit2, FiSettings, FiLayers } from 'react-icons/fi';
 
-const Sidebar = ({ activeTab, setActiveTab }) => {
+const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
     const menuItems = [
         { id: 'generate', label: 'Generate Image', icon: <FiImage /> },
         { id: 'product', label: 'Product Studio', icon: <FiShoppingBag /> },
@@ -10,23 +10,15 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
     ];
 
     return (
-        <div style={{
-            width: '280px',
-            height: '100vh',
-            backgroundColor: 'var(--color-surface)',
-            borderRight: '1px solid var(--color-border)',
-            padding: '1.5rem',
-            display: 'flex',
-            flexDirection: 'column',
-            position: 'fixed'
-        }}>
-            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+        <aside className={`sidebar ${mobileOpen ? 'open' : ''}`}>
+            <div style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'space-between' }}>
                 <div style={{
                     width: '32px', height: '32px',
                     background: 'linear-gradient(135deg, var(--color-primary), var(--color-primary-dark))',
                     borderRadius: '8px'
                 }}></div>
                 <h1 style={{ fontSize: '1.25rem', fontWeight: '700', letterSpacing: '-0.025em' }}>Visionary</h1>
+                <button className="btn-primary mobile-close" onClick={() => setMobileOpen(false)} style={{ padding: '0.25rem 0.5rem' }}>Close</button>
             </div>
 
             <nav style={{ flex: 1 }}>
@@ -34,7 +26,7 @@ const Sidebar = ({ activeTab, setActiveTab }) => {
                     {menuItems.map((item) => (
                         <li key={item.id}>
                             <button
-                                onClick={() => setActiveTab(item.id)}
+                                onClick={() => { setActiveTab(item.id); if (setMobileOpen) setMobileOpen(false); }}
                                 style={{
                                     width: '100%',
                                     display: 'flex',
