@@ -87,18 +87,33 @@ const GenerativeFill = () => {
         ctx.lineCap = 'round';
         ctx.strokeStyle = 'rgba(255, 0, 64, 0.45)';
 
-        ctxMask.beginPath();
-        ctxMask.moveTo(x, y);
-        ctxMask.lineTo(x + 0.01, y + 0.01);
-        ctxMask.stroke();
+        // configure stroke/fill before drawing to ensure correct size for single clicks
+        ctx.lineWidth = brushSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(255, 0, 64, 0.45)';
+        ctx.fillStyle = 'rgba(255, 0, 64, 0.45)';
+
         ctxMask.lineWidth = brushSize;
         ctxMask.lineCap = 'round';
+        ctxMask.lineJoin = 'round';
         ctxMask.strokeStyle = 'white';
-        setIsDrawing(true);
-    };
+        ctxMask.fillStyle = 'white';
 
-    const startTouch = (e) => {
-        e.preventDefault();
+        // draw a filled circle for immediate visual feedback (handles single-click)
+        ctx.beginPath();
+        ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctxMask.beginPath();
+        ctxMask.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+        ctxMask.fill();
+        // get ready for continuous strokes
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctxMask.beginPath();
+        ctxMask.moveTo(x, y);
+        setIsDrawing(true);
         const touch = e.touches[0];
         startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
     };
@@ -112,6 +127,16 @@ const GenerativeFill = () => {
         const rect = canvas.getBoundingClientRect();
         const x = (e.clientX - rect.left) * (canvas.width / rect.width);
         const y = (e.clientY - rect.top) * (canvas.height / rect.height);
+
+        // ensure styles are applied for continuous drawing
+        ctx.lineWidth = brushSize;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.strokeStyle = 'rgba(255, 0, 64, 0.45)';
+        ctxMask.lineWidth = brushSize;
+        ctxMask.lineCap = 'round';
+        ctxMask.lineJoin = 'round';
+        ctxMask.strokeStyle = 'white';
 
         ctx.lineTo(x, y);
         ctx.stroke();
@@ -183,7 +208,6 @@ const GenerativeFill = () => {
             const tempCtx = tempCanvas.getContext('2d');
             tempCtx.fillStyle = 'black';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-            tempCtx.drawImage(maskCanvas, 0, 0);
 
             // If the mask canvas has zero size, avoid calling drawImage on it — create a full-black mask
             if (!maskCanvas || !maskCanvas.width || !maskCanvas.height) {
@@ -200,6 +224,7 @@ const GenerativeFill = () => {
             }
 
             const maskBlob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/png'));
+            console.log('GenerativeFill mask size:', tempCanvas.width, tempCanvas.height, maskBlob && maskBlob.size);
 
             const formData = new FormData();
             formData.append('file', image);
