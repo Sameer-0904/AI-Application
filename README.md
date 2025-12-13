@@ -6,7 +6,7 @@ A powerful full-stack AI Design Studio for advanced image generation and manipul
 
 <a href="https://visionary-t4kd.onrender.com">Visionary AI Studio</a>
 
-**Note:** **Still Generative Fill and Erase Object feature not working properly I'll fix that later.**
+**Note:** **Still Generative Fill and Erase Object Features are not working properly I'll fix that later.**
 
 ## 🌟 Features
 
