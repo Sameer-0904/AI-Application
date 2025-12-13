@@ -1,8 +1,12 @@
 # 🎨 Visionary
 
-A powerful full-stack AI Design Studio for advanced image generation and manipulation using Bria AI. Built with **React** (Frontend) and **FastAPI** (Backend).
+A powerful full-stack AI Design Studio for advanced image generation and manipulation using Bria AI. Built with **React** (Frontend) and **FastAPI** 
 
-**Note:** **Currently this website does not look good on mobile. I will fix this in future updates.**
+**Here is the demo link of Visionary**
+
+<a href="https://visionary-t4kd.onrender.com">Visionary AI Studio</a>
+
+**Note:** **Still Generative Fill and Erase Object feature not working properly I'll fix that later.**
 
 ## 🌟 Features
 
