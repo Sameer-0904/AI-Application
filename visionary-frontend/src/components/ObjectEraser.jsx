@@ -13,22 +13,29 @@ const ObjectEraser = () => {
     const maskCanvasRef = useRef(null);
     const imageRef = useRef(null);
     const [isDrawing, setIsDrawing] = useState(false);
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     useEffect(() => {
         if (imageSrc && canvasRef.current && maskCanvasRef.current && imageRef.current) {
             const canvas = canvasRef.current;
             const maskCanvas = maskCanvasRef.current;
             const img = imageRef.current;
-            const width = img.width;
-            const height = img.height;
-            canvas.width = width;
-            canvas.height = height;
-            maskCanvas.width = width;
-            maskCanvas.height = height;
-            const ctx = canvas.getContext('2d');
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const ctxMask = maskCanvas.getContext('2d');
-            ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+            const width = img.naturalWidth || img.width || 0;
+            const height = img.naturalHeight || img.height || 0;
+            if (width > 0 && height > 0) {
+                canvas.width = width;
+                canvas.height = height;
+                maskCanvas.width = width;
+                maskCanvas.height = height;
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
+                maskCanvas.style.width = '100%';
+                maskCanvas.style.height = 'auto';
+                const ctx = canvas.getContext('2d');
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                const ctxMask = maskCanvas.getContext('2d');
+                ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+            }
         }
     }, [imageSrc]);
 
@@ -39,12 +46,28 @@ const ObjectEraser = () => {
             const url = URL.createObjectURL(file);
             setImageSrc(url);
             setResult(null);
+            setImageLoaded(false);
         }
     };
 
     const startDrawing = (e) => {
         const canvas = canvasRef.current;
         const maskCanvas = maskCanvasRef.current;
+        const img = imageRef.current;
+        if (img && canvas && (!canvas.width || !canvas.height)) {
+            const width = img.naturalWidth || img.width || 0;
+            const height = img.naturalHeight || img.height || 0;
+            if (width > 0 && height > 0) {
+                canvas.width = width;
+                canvas.height = height;
+                maskCanvas.width = width;
+                maskCanvas.height = height;
+                canvas.style.width = '100%';
+                canvas.style.height = 'auto';
+                maskCanvas.style.width = '100%';
+                maskCanvas.style.height = 'auto';
+            }
+        }
         const ctx = canvas.getContext('2d');
         const ctxMask = maskCanvas.getContext('2d');
         const rect = canvas.getBoundingClientRect();
@@ -125,10 +148,34 @@ const ObjectEraser = () => {
         setResult(null);
 
         try {
+            // Ensure canvas backing store sizes are set; prevents drawImage errors if image hasn't finished sizing
             const canvas = canvasRef.current;
+            const maskCanvas = maskCanvasRef.current;
+            const img = imageRef.current;
+            if (img && canvas && maskCanvas && (!canvas.width || !canvas.height)) {
+                const width = img.naturalWidth || img.width || 0;
+                const height = img.naturalHeight || img.height || 0;
+                if (width > 0 && height > 0) {
+                    canvas.width = width;
+                    canvas.height = height;
+                    maskCanvas.width = width;
+                    maskCanvas.height = height;
+                }
+            }
+            const canvas = canvasRef.current;
+            const maskCanvas = maskCanvasRef.current;
+            // If mask canvas backing store isn't ready, ask user to wait and avoid drawImage errors
+            if (!maskCanvas || !maskCanvas.width || !maskCanvas.height) {
+                alert('Please wait until the image finishes loading and draw a mask before proceeding.');
+                setLoading(false);
+                return;
+            }
             const tempCanvas = document.createElement('canvas');
-            tempCanvas.width = canvas.width;
-            tempCanvas.height = canvas.height;
+            const img = imageRef.current;
+            const width = (canvas && canvas.width) || (img && (img.naturalWidth || img.width)) || 1024;
+            const height = (canvas && canvas.height) || (img && (img.naturalHeight || img.height)) || 1024;
+            tempCanvas.width = width;
+            tempCanvas.height = height;
             const maskCanvas = maskCanvasRef.current;
             const tempCtx = tempCanvas.getContext('2d');
 
@@ -136,6 +183,20 @@ const ObjectEraser = () => {
             tempCtx.fillStyle = 'black';
             tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
             tempCtx.drawImage(maskCanvas, 0, 0);
+
+            // If the mask canvas has zero size, avoid calling drawImage on it — create a full-black mask
+            if (!maskCanvas || !maskCanvas.width || !maskCanvas.height) {
+                tempCtx.fillStyle = 'black';
+                tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+            } else {
+                try {
+                    tempCtx.drawImage(maskCanvas, 0, 0);
+                } catch (err) {
+                    console.warn('drawImage failed, falling back to black mask', err);
+                    tempCtx.fillStyle = 'black';
+                    tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+                }
+            }
 
             const maskBlob = await new Promise(resolve => tempCanvas.toBlob(resolve, 'image/png'));
 
@@ -199,10 +260,22 @@ const ObjectEraser = () => {
                                 src={result || imageSrc}
                                 alt="Target"
                                 onLoad={() => {
-                                    if (canvasRef.current) {
-                                        canvasRef.current.width = imageRef.current.width;
-                                        canvasRef.current.height = imageRef.current.height;
+                                    if (canvasRef.current && maskCanvasRef.current && imageRef.current) {
+                                        const img = imageRef.current;
+                                        const width = img.naturalWidth || img.width || 0;
+                                        const height = img.naturalHeight || img.height || 0;
+                                        if (width > 0 && height > 0) {
+                                            canvasRef.current.width = width;
+                                            canvasRef.current.height = height;
+                                            canvasRef.current.style.width = '100%';
+                                            canvasRef.current.style.height = 'auto';
+                                            maskCanvasRef.current.width = width;
+                                            maskCanvasRef.current.height = height;
+                                            maskCanvasRef.current.style.width = '100%';
+                                            maskCanvasRef.current.style.height = 'auto';
+                                        }
                                     }
+                                    setImageLoaded(true);
                                 }}
                                 style={{ maxWidth: '100%', maxHeight: '600px', display: 'block', pointerEvents: 'none' }}
                             />
@@ -290,7 +363,7 @@ const ObjectEraser = () => {
                         const maskCanvas = maskCanvasRef.current;
                         if (maskCanvas) { const ctxMask = maskCanvas.getContext('2d'); ctxMask.clearRect(0, 0, maskCanvas.width, maskCanvas.height); }
                     }}>Clear</button>
-                    <button className="btn-primary" style={{ width: '70%' }} onClick={handleProcess} disabled={loading}>{loading ? 'Processing...' : 'Erase Object'}</button>
+                    <button className="btn-primary" style={{ width: '70%' }} onClick={handleProcess} disabled={loading || !imageLoaded || !image}>{loading ? 'Processing...' : 'Erase Object'}</button>
                 </div>
             </div>
 
@@ -305,7 +378,7 @@ const ObjectEraser = () => {
                 }}>
                     Clear
                 </button>
-                <button className="btn-primary" onClick={handleProcess} disabled={loading}>{loading ? 'Processing...' : 'Erase'}</button>
+                <button className="btn-primary" onClick={handleProcess} disabled={loading || !imageLoaded || !image}>{loading ? 'Processing...' : 'Erase'}</button>
             </div>
         </div>
     );
