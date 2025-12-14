@@ -6,7 +6,6 @@ const Sidebar = ({ activeTab, setActiveTab, mobileOpen, setMobileOpen }) => {
         { id: 'generate', label: 'Generate Image', icon: <FiImage /> },
         { id: 'product', label: 'Product Studio', icon: <FiShoppingBag /> },
         { id: 'gen-fill', label: 'Generative Fill', icon: <FiEdit2 /> },
-        { id: 'erase', label: 'Object Eraser', icon: <FiLayers /> },
     ];
 
     return (

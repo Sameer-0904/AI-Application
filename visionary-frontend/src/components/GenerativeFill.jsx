@@ -78,44 +78,23 @@ const GenerativeFill = () => {
         const x = (e.clientX - rect.left) * (canvas.width / rect.width);
         const y = (e.clientY - rect.top) * (canvas.height / rect.height);
 
-        ctx.beginPath();
-        ctx.moveTo(x, y);
-        // draw a tiny stroke immediately so a single click creates a visible dot
-        ctx.lineTo(x + 0.01, y + 0.01);
-        ctx.stroke();
-        ctx.lineWidth = brushSize;
-        ctx.lineCap = 'round';
-        ctx.strokeStyle = 'rgba(255, 0, 64, 0.45)';
-
-        // configure stroke/fill before drawing to ensure correct size for single clicks
+        // Set brush properties before drawing
         ctx.lineWidth = brushSize;
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(255, 0, 64, 0.45)';
-        ctx.fillStyle = 'rgba(255, 0, 64, 0.45)';
+        ctx.strokeStyle = 'rgba(255, 0, 64, 0.6)';
 
         ctxMask.lineWidth = brushSize;
         ctxMask.lineCap = 'round';
         ctxMask.lineJoin = 'round';
         ctxMask.strokeStyle = 'white';
-        ctxMask.fillStyle = 'white';
 
-        // draw a filled circle for immediate visual feedback (handles single-click)
-        ctx.beginPath();
-        ctx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctxMask.beginPath();
-        ctxMask.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-        ctxMask.fill();
-        // get ready for continuous strokes
+        // Start path for continuous strokes
         ctx.beginPath();
         ctx.moveTo(x, y);
         ctxMask.beginPath();
         ctxMask.moveTo(x, y);
         setIsDrawing(true);
-        const touch = e.touches[0];
-        startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
     };
 
     const draw = (e) => {
@@ -127,16 +106,6 @@ const GenerativeFill = () => {
         const rect = canvas.getBoundingClientRect();
         const x = (e.clientX - rect.left) * (canvas.width / rect.width);
         const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-
-        // ensure styles are applied for continuous drawing
-        ctx.lineWidth = brushSize;
-        ctx.lineCap = 'round';
-        ctx.lineJoin = 'round';
-        ctx.strokeStyle = 'rgba(255, 0, 64, 0.45)';
-        ctxMask.lineWidth = brushSize;
-        ctxMask.lineCap = 'round';
-        ctxMask.lineJoin = 'round';
-        ctxMask.strokeStyle = 'white';
 
         ctx.lineTo(x, y);
         ctx.stroke();
@@ -170,6 +139,12 @@ const GenerativeFill = () => {
         endDrawing();
     };
 
+    const startTouch = (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        startDrawing({ clientX: touch.clientX, clientY: touch.clientY });
+    };
+
     const handleProcess = async () => {
         if (!image) return;
         if (!prompt) return;
@@ -191,13 +166,6 @@ const GenerativeFill = () => {
                     maskCanvas.width = width;
                     maskCanvas.height = height;
                 }
-            }
-            // reuse canvas, maskCanvas, and img declared above
-            // If mask canvas backing store isn't ready, ask user to wait and avoid drawImage errors
-            if (!maskCanvas || !maskCanvas.width || !maskCanvas.height) {
-                alert('Please wait until the image finishes loading and draw a mask before generating.');
-                setLoading(false);
-                return;
             }
             const tempCanvas = document.createElement('canvas');
             const width = (canvas && canvas.width) || (img && (img.naturalWidth || img.width)) || 1024;
@@ -317,10 +285,13 @@ const GenerativeFill = () => {
                                         onTouchEnd={endTouch}
                                         style={{
                                             position: 'absolute',
-                                            top: 0, left: 0,
-                                            width: '100%', height: '100%',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
                                             cursor: 'crosshair',
-                                            touchAction: 'none'
+                                            touchAction: 'none',
+                                            display: 'block'
                                         }}
                                     />
                                     <canvas ref={maskCanvasRef} style={{ display: 'none' }} />

@@ -4,7 +4,6 @@ import { FiMenu } from 'react-icons/fi';
 import ImageGenerator from './components/ImageGenerator';
 import ProductStudio from './components/ProductStudio';
 import GenerativeFill from './components/GenerativeFill';
-import ObjectEraser from './components/ObjectEraser';
 import './App.css';
 
 // Placeholders for future components
@@ -26,7 +25,6 @@ function App() {
       case 'generate': return <ImageGenerator apiKey={apiKey} />;
       case 'product': return <ProductStudio apiKey={apiKey} />;
       case 'gen-fill': return <GenerativeFill />;
-      case 'erase': return <ObjectEraser />;
       default: return <Placeholder title="Welcome" />;
     }
   };
