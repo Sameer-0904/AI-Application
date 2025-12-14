@@ -6,8 +6,6 @@ A powerful full-stack AI Design Studio for advanced image generation and manipul
 
 <a href="https://visionary-t4kd.onrender.com">Visionary AI Studio</a>
 
-**Note:** **Still Generative Fill and Erase Object Features are not working properly I'll fix that later.**
-
 ## 🌟 Features
 
 - 🖼️ **Text-to-Image Generation**: Create stunning HD visuals from text prompts with intelligent prompt enhancement, various artistic styles, and dynamic aspect ratios.
@@ -16,7 +14,6 @@ A powerful full-stack AI Design Studio for advanced image generation and manipul
   - **Add Shadow**: Advanced shadow control with presets (Regular, Floating) and parametric adjustments.
   - **Lifestyle Shot**: Place products in any scene using smart text descriptions.
 - 🖌️ **Generative Fill**: seamless inpainting to modify specific areas of an image with AI-generated content.
-- 🧼 **Object Eraser**: Cleanly remove unwanted objects from images using a magic eraser tool.
 - 🔒 **Secure Architecture**: API keys are safely managed in the backend, never exposed to the client.
 
 ## 🛠️ Tech Stack
@@ -93,11 +90,6 @@ The app is organized into dedicated studios in the sidebar:
 - **Draw** a mask over the area to fill.
 - **Describe** what should fill the area.
 - Click **"Generate Fill"**.
-
-### 4. 🧼 Object Eraser
-- **Upload** an image.
-- **Draw** a mask over the object to remove.
-- Click **"Erase Object"**.
 
 ## 🤝 Contributing
 
